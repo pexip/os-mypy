@@ -1,0 +1,24 @@
+#!/bin/bash
+set -ex
+
+pkg=mypy
+
+START="$(dirname "$(dirname "$(dirname "$(readlink -fm "$0")")")")"
+
+if [ "$AUTOPKGTEST_TMP" = "" ] ; then
+  AUTOPKGTEST_TMP=$(mktemp -d /tmp/${pkg}-test.XXXXXX)
+  trap "rm -rf $AUTOPKGTEST_TMP" 0 INT QUIT ABRT PIPE TERM
+fi
+
+cd "$AUTOPKGTEST_TMP"
+
+export TEST_MYPYC=1
+
+MYPY_TEST_PREFIX=${START} pytest-3 -n auto -v -o testpaths="mypy/test mypyc/test" \
+	-o python_files=test*.py -o python_classes= \
+	-o python_functions= -k 'not (StubtestMiscUnit or StubtestUnit or testSubclassSpecialize1 or testSubclassSpecialize2 or testMultiModuleSpecialize or testMultiModuleSpecialize_multi or testMultiModuleSpecialize_separate)' \
+	--pyargs mypy
+
+cp -r /usr/lib/python3/dist-packages/mypy ./
+rm -Rf mypy/typeshed
+#/usr/bin/mypy --config-file ${START}/mypy_self_check.ini mypy

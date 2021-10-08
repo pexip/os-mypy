@@ -1,0 +1,9 @@
+Document: mypy-doc
+Title: Mypy Documentation
+Author: Jukka Lehtosalo
+Abstract: This is the reference documentation for mypy.
+Section: Programming/Python
+
+Format: HTML
+Index: /usr/share/doc/mypy/html/index.html
+Files: /usr/share/doc/mypy/html/*.html

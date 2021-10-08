@@ -1,0 +1,23 @@
+Author: Michael R. Crusoe <crusoe@debian.org>
+Description: link to local documenatin
+Forwarded: not-needed
+--- mypy.orig/docs/source/conf.py
++++ mypy/docs/source/conf.py
+@@ -271,12 +271,12 @@
+ rst_prolog = '.. |...| unicode:: U+2026   .. ellipsis\n'
+ 
+ intersphinx_mapping = {
+-    'python': ('https://docs.python.org/3', None),
+-    'six': ('https://six.readthedocs.io', None),
+-    'attrs': ('http://www.attrs.org/en/stable', None),
+-    'cython': ('http://docs.cython.org/en/latest', None),
++    'python': ('https://docs.python.org/3', f'/usr/share/doc/python{sys.version_info.major}.{sys.version_info.minor}/html/objects.inv'),
++    'six': ('https://six.readthedocs.io', '/usr/share/doc/python-six/html/objects.inv'),
++    'attrs': ('http://www.attrs.org/en/stable', '/usr/share/doc/python-attr-doc/html/objects.inv'),
++    'cython': ('http://docs.cython.org/en/latest', '/usr/share/doc/cython-doc/html/objects.inv'),
+     'monkeytype': ('https://monkeytype.readthedocs.io/en/latest', None),
+-    'setuptools': ('https://setuptools.readthedocs.io/en/latest', None),
++    'setuptools': ('https://setuptools.readthedocs.io/en/latest', '/usr/share/doc/python-setuptools-doc/html/objects.inv'),
+ }
+ 
+ 

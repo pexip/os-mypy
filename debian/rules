@@ -1,0 +1,90 @@
+#!/usr/bin/make -f
+SHELL=bash  # needed for the <(echo …) process subsitution temporary file
+            # tricks with help2man
+export DH_VERBOSE=1
+export PYBUILD_DESTDIR_python3=debian/python3-mypy
+export PYBUILD_NAME=mypy
+PY3VERS=$(shell py3versions -vr)
+
+include /usr/share/dpkg/pkg-info.mk
+ifeq (,$(filter nodoc,$(DEB_BUILD_PROFILES)))
+	WITH += ,sphinxdoc
+endif
+
+export DEB_BUILD_MAINT_OPTIONS=hardening=+all
+include /usr/share/dpkg/default.mk
+
+ifneq (,$(filter $(DEB_BUILD_ARCH),hppa))
+  export MYPYC_OPT_LEVEL=2
+else ifeq ($(DEB_HOST_ARCH_BITS), 32)
+  export DEB_CFLAGS_MAINT_APPEND += -g1
+  export DEB_CXXFLAGS_MAINT_APPEND += -g1
+endif
+
+
+%:
+	dh $@ --with python3$(WITH) --buildsystem=pybuild
+
+ifeq (,$(filter nodoc,$(DEB_BUILD_PROFILES)))
+manpages: debian/sphinx/mypy_options.rst debian/sphinx/stubgen_options.rst debian/dmypy.1 debian/mypy.1 debian/stubgen.1
+else
+manpages:
+endif
+
+debian/%.1: debian/sphinx/%.rst debian/sphinx/%_options.rst
+	sphinx-build -N -b man debian/sphinx debian $<
+
+# create an empty file to simplify the makefile logic
+debian/sphinx/dmypy_options.rst:
+	touch $@
+
+debian/sphinx/mypy_options.rst: docs/source/command_line.rst
+	sed 's,The .* command line,OPTIONS,g' $< > $@
+
+debian/sphinx/stubgen_options.rst: docs/source/stubgen.rst
+	sed -n -e '/stubgen --help/,$$ {/stubgen --help/d; p}' $< > $@
+
+override_dh_auto_build-arch:
+ifneq (,$(filter $(DEB_BUILD_ARCH),mips64el mipsel alpha ia64 m68k powerpc riscv64 sh4 sparc64))
+	MYPY_USE_MYPYC=0 dh_auto_build
+else
+	MYPY_USE_MYPYC=1 dh_auto_build
+endif
+
+override_dh_auto_build-indep: manpages
+ifeq (,$(filter nodoc,$(DEB_BUILD_PROFILES)))
+	PYTHONPATH=$(CURDIR) $(MAKE) -C docs html
+endif
+
+
+override_dh_auto_clean:
+	dh_auto_clean
+ifeq (,$(filter nodoc,$(DEB_BUILD_PROFILES)))
+	$(MAKE) -C docs clean
+	rm -rf debian/.doctrees
+	rm -f  debian/sphinx/dmypy_options.rst
+	rm -f  debian/sphinx/mypy_options.rst
+	rm -f  debian/sphinx/stubgen_options.rst
+endif
+
+override_dh_auto_install:
+	dh_auto_install
+	dh_movefiles --package=mypy --sourcedir=debian/python3-mypy usr/bin
+	rm -Rf debian/python3-mypy/usr/bin
+
+override_dh_auto_test:
+ifeq (,$(filter nocheck,$(DEB_BUILD_PROFILES)))
+	export TEST_MYPYC=1
+	PYBUILD_SYSTEM=custom \
+		PYBUILD_TEST_ARGS="{interpreter} -m mypy \
+		--config-file {dir}/mypy_self_check.ini -p mypy" dh_auto_test
+	dh_auto_install
+	set -e; for v in $(PY3VERS); do \
+		PATH=$$PATH:$(CURDIR)/debian/mypy/usr/bin/ python$$v -m pytest -n auto \
+		-o testpaths="mypy/test mypyc/test" -o python_files=test*.py \
+		-k "not (StubtestMiscUnit or StubtestUnit or testSubclassSpecialize1 or testSubclassSpecialize2 or testMultiModuleSpecialize or testMultiModuleSpecialize_multi or testMultiModuleSpecialize_separate)" \
+		-o python_classes= -o python_functions=; \
+	done
+endif
+
+.PHONY: manpages
