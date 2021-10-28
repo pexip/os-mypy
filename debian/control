@@ -1,15 +1,18 @@
 Source: mypy
-Maintainer: Debian Med Packaging Team <debian-med-packaging@lists.alioth.debian.org>
-Uploaders: Michael R. Crusoe <crusoe@debian.org>
+Maintainer: Pexip AS <packaging@pexip.com>
+XSBC-Pexip-Original-Maintainer: Debian Med Packaging Team <debian-med-packaging@lists.alioth.debian.org>
+XSBC-Pexip-Original-Uploaders: Michael R. Crusoe <crusoe@debian.org>
 Section: utils
 Testsuite: autopkgtest-pkg-python
 Priority: optional
-Build-Depends: debhelper-compat (= 13),
+Build-Depends: debhelper-compat (= 11),
                dh-python,
                flake8,
                help2man,
                python3-all,
                python3-lxml,
+               python3-pytest (>=6.1.0) <!nocheck>,
+               python3-pytest (<<7.0.0) <!nocheck>,
                python3-pytest-xdist <!nocheck>,
                python3-pytest-cov <!nocheck>,
                python3-setuptools,
@@ -21,6 +24,7 @@ Build-Depends: debhelper-compat (= 13),
                python3-types-typed-ast,
                python3-psutil,
                python3-mypy-extensions,
+               python3-toml,
                python3-typing-extensions,
                python3-virtualenv <!nocheck>,
                python3-all-dev,
@@ -34,6 +38,7 @@ Vcs-Browser: https://salsa.debian.org/med-team/mypy
 Vcs-Git: https://salsa.debian.org/med-team/mypy.git
 Homepage: http://www.mypy-lang.org/
 Rules-Requires-Root: no
+XS-Pexip-Upstream: http://ftp.debian.org/debian/ bookworm
 
 Package: mypy
 Architecture: all

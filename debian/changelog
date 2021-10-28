@@ -1,3 +1,9 @@
+mypy (0.910-3pexip1) pexip; urgency=medium
+
+  * Prepare Pexip packaging
+
+ -- Huw Jones <huw@pexip.com>  Thu, 28 Oct 2021 14:13:48 +0000
+
 mypy (0.910-3) unstable; urgency=medium
 
   * 32 bit systems: compile with -g1 instead of other approaches; fix courtesy
