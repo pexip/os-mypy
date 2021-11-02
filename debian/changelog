@@ -1,3 +1,9 @@
+mypy (0.910-3pexip2) pexip; urgency=medium
+
+  * Pin runtime deps
+
+ -- Huw Jones <huw@pexip.com>  Tue, 02 Nov 2021 17:41:48 +0000
+
 mypy (0.910-3pexip1) pexip; urgency=medium
 
   * Prepare Pexip packaging
