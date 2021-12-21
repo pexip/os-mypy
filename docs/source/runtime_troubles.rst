@@ -62,7 +62,7 @@ required to be valid Python syntax. For more details, see :pep:`563`.
     of forward references or generics in:
 
     * :ref:`type aliases <type-aliases>`;
-    * :ref:`casts <casts>`;
+    * :ref:`type narrowing <type-narrowing>`;
     * type definitions (see :py:class:`~typing.TypeVar`, :py:func:`~typing.NewType`, :py:class:`~typing.NamedTuple`);
     * base classes.
 
@@ -93,12 +93,6 @@ that is ``False`` at runtime but treated as ``True`` while type checking.
 Since code inside ``if TYPE_CHECKING:`` is not executed at runtime, it provides
 a convenient way to tell mypy something without the code being evaluated at
 runtime. This is most useful for resolving :ref:`import cycles <import-cycles>`.
-
-.. note::
-
-   Python 3.5.1 and below don't have :py:data:`~typing.TYPE_CHECKING`. An
-   alternative is to define a constant named ``MYPY`` that has the value
-   ``False`` at runtime. Mypy considers it to be ``True`` when type checking.
 
 Class name forward references
 -----------------------------

@@ -28,8 +28,8 @@ from mypy.split_namespace import SplitNamespace
 
 from mypy.version import __version__
 
-orig_stat = os.stat  # type: Final
-MEM_PROFILE = False  # type: Final  # If True, dump memory profile
+orig_stat: Final = os.stat
+MEM_PROFILE: Final = False  # If True, dump memory profile
 
 
 def stat_proxy(path: str) -> os.stat_result:
@@ -208,11 +208,11 @@ class AugmentedHelpFormatter(argparse.RawDescriptionHelpFormatter):
 
 
 # Define pairs of flag prefixes with inverse meaning.
-flag_prefix_pairs = [
+flag_prefix_pairs: Final = [
     ('allow', 'disallow'),
     ('show', 'hide'),
-]  # type: Final
-flag_prefix_map = {}  # type: Final[Dict[str, str]]
+]
+flag_prefix_map: Final[Dict[str, str]] = {}
 for a, b in flag_prefix_pairs:
     flag_prefix_map[a] = b
     flag_prefix_map[b] = a
@@ -237,8 +237,8 @@ class PythonExecutableInferenceError(Exception):
 def python_executable_prefix(v: str) -> List[str]:
     if sys.platform == 'win32':
         # on Windows, all Python executables are named `python`. To handle this, there
-        # is the `py` launcher, which can be passed a version e.g. `py -3.5`, and it will
-        # execute an installed Python 3.5 interpreter. See also:
+        # is the `py` launcher, which can be passed a version e.g. `py -3.8`, and it will
+        # execute an installed Python 3.8 interpreter. See also:
         # https://docs.python.org/3/using/windows.html#python-launcher-for-windows
         return ['py', '-{}'.format(v)]
     else:
@@ -282,11 +282,11 @@ def infer_python_executable(options: Options,
     options.python_executable = python_executable
 
 
-HEADER = """%(prog)s [-h] [-v] [-V] [more options; see below]
-            [-m MODULE] [-p PACKAGE] [-c PROGRAM_TEXT] [files ...]"""  # type: Final
+HEADER: Final = """%(prog)s [-h] [-v] [-V] [more options; see below]
+            [-m MODULE] [-p PACKAGE] [-c PROGRAM_TEXT] [files ...]"""
 
 
-DESCRIPTION = """
+DESCRIPTION: Final = """
 Mypy is a program that will type check your Python code.
 
 Pass in any files or folders you want to type check. Mypy will
@@ -307,11 +307,11 @@ You can also use a config file to configure mypy instead of using
 command line flags. For more details, see:
 
 - https://mypy.readthedocs.io/en/stable/config_file.html
-"""  # type: Final
+"""
 
-FOOTER = """Environment variables:
+FOOTER: Final = """Environment variables:
   Define MYPYPATH for additional module search path entries.
-  Define MYPY_CACHE_DIR to override configuration cache_dir path."""  # type: Final
+  Define MYPY_CACHE_DIR to override configuration cache_dir path."""
 
 
 class CapturableArgumentParser(argparse.ArgumentParser):
@@ -434,8 +434,8 @@ def process_options(args: List[str],
                                       stdout=stdout,
                                       stderr=stderr)
 
-    strict_flag_names = []  # type: List[str]
-    strict_flag_assignments = []  # type: List[Tuple[str, bool]]
+    strict_flag_names: List[str] = []
+    strict_flag_assignments: List[Tuple[str, bool]] = []
 
     def add_invertible_flag(flag: str,
                             *,
@@ -852,8 +852,6 @@ def process_options(args: List[str],
     # Must be followed by another flag or by '--' (and then only file args may follow).
     parser.add_argument('--cache-map', nargs='+', dest='special-opts:cache_map',
                         help=argparse.SUPPRESS)
-    # PEP 612 support is a work in progress, hide it from users
-    parser.add_argument('--wip-pep-612', action="store_true", help=argparse.SUPPRESS)
 
     # options specifying code to check
     code_group = parser.add_argument_group(
@@ -1008,6 +1006,11 @@ def process_options(args: List[str],
             parser.error("--cache-map is incompatible with --sqlite-cache")
 
         process_cache_map(parser, special_opts, options)
+
+    # An explicitly specified cache_fine_grained implies local_partial_types
+    # (because otherwise the cache is not compatiable with dmypy)
+    if options.cache_fine_grained:
+        options.local_partial_types = True
 
     # Let logical_deps imply cache_fine_grained (otherwise the former is useless).
     if options.logical_deps:
