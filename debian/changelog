@@ -1,3 +1,12 @@
+mypy (0.921-1pexip1) pexip; urgency=medium
+
+  * Bump version to 0.921-1pexip1
+  * Remove uneeded fix for MYPY-9980 and MYPY-11355 as fixes are now upstream
+    https://github.com/python/mypy/issues/9980
+    https://github.com/python/mypy/issues/11355
+
+ -- Huw Jones <huw@pexip.com>  Wed, 5 Jan 2022 14:59:58 +0000
+
 mypy (0.921-1) unstable; urgency=medium
 
   * New upstream version
