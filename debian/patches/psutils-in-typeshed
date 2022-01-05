@@ -1,0 +1,14 @@
+Author: Antonio Terceiro <terceiro@debian.org>
+Description: drop typing ignore for psutil (now provided by python3-typeshed)
+Forwarded: not-needed
+--- mypy.orig/mypy/dmypy_server.py
++++ mypy/mypy/dmypy_server.py
+@@ -874,7 +874,7 @@
+ def get_meminfo() -> Dict[str, Any]:
+     res: Dict[str, Any] = {}
+     try:
+-        import psutil  # type: ignore  # It's not in typeshed yet
++        import psutil
+     except ImportError:
+         res['memory_psutil_missing'] = (
+             'psutil not found, run pip install mypy[dmypy] '

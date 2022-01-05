@@ -1,3 +1,28 @@
+mypy (0.921-1) unstable; urgency=medium
+
+  * New upstream version
+  * debian/rules: skip testErrorOutput for now
+  * debian/patches/python3.10.1{,_part2}: cherry-pick patches from upstream
+    for Python 3.10.1 compat.
+  * debian/control: add tomli build-dep
+  * debian/patches: small refresh
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Tue, 21 Dec 2021 21:04:13 +0100
+
+mypy (0.910-4) unstable; urgency=medium
+
+  [ Antonio Terceiro ]
+  * Build-Depends/autopkgtest: replace python3-types-* with python3-typeshed
+    (Closes: #999479)
+  * Recommend python3-typeshed
+  * Don't ignore typing for psutil (now provided by typeshed)
+
+  [ Andreas Tille ]
+  * Remove constraints unnecessary since buster:
+    + Build-Depends: Drop versioned constraint on python3-typed-ast.
+
+ -- Andreas Tille <tille@debian.org>  Sat, 13 Nov 2021 07:32:09 +0100
+
 mypy (0.910-3pexip3) pexip; urgency=medium
 
   * Fix for https://github.com/python/mypy/issues/9980

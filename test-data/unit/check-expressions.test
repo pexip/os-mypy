@@ -63,13 +63,7 @@ if str():
     a = 1.1
 class A:
     pass
-[file builtins.py]
-class object:
-    def __init__(self): pass
-class type: pass
-class function: pass
-class float: pass
-class str: pass
+[builtins fixtures/dict.pyi]
 
 [case testComplexLiteral]
 a = 0.0j
@@ -80,13 +74,7 @@ if str():
     a = 1.1j
 class A:
     pass
-[file builtins.py]
-class object:
-    def __init__(self): pass
-class type: pass
-class function: pass
-class complex: pass
-class str: pass
+[builtins fixtures/dict.pyi]
 
 [case testBytesLiteral]
 b, a = None, None # type: (bytes, A)
@@ -99,14 +87,7 @@ if str():
 if str():
     a = b'foo' # E: Incompatible types in assignment (expression has type "bytes", variable has type "A")
 class A: pass
-[file builtins.py]
-class object:
-    def __init__(self): pass
-class type: pass
-class tuple: pass
-class function: pass
-class bytes: pass
-class str: pass
+[builtins fixtures/dict.pyi]
 
 [case testUnicodeLiteralInPython3]
 s = None  # type: str
@@ -434,18 +415,18 @@ class D(Iterable[A]):
 [builtins fixtures/bool.pyi]
 
 [case testNonBooleanContainsReturnValue]
-a, b, c = None, None, None # type: (A, bool, int)
+a, b, c = None, None, None # type: (A, bool, str)
 if int():
     b = a not in a
 if int():
     b = a in a
 if int():
-    c = a not in a  # E: Incompatible types in assignment (expression has type "bool", variable has type "int")
+    c = a not in a  # E: Incompatible types in assignment (expression has type "bool", variable has type "str")
 if int():
-    c = a in a  # E: Incompatible types in assignment (expression has type "bool", variable has type "int")
+    c = a in a  # E: Incompatible types in assignment (expression has type "bool", variable has type "str")
 
 class A:
-  def __contains__(self, x: 'A') -> int: pass
+  def __contains__(self, x: 'A') -> str: pass
 [builtins fixtures/bool.pyi]
 
 [case testInWithInvalidArgs]
@@ -1278,11 +1259,52 @@ b'%a' % 3
 [builtins fixtures/primitives.pyi]
 [typing fixtures/typing-medium.pyi]
 
-[case testStringInterpolationC]
+[case testStringInterPolationCPython2]
+# flags: --py2 --no-strict-optional
 '%c' % 1
+'%c' % 1.0   # E: "%c" requires int or char (expression has type "float")
 '%c' % 's'
-'%c' % ''  # E: "%c" requires int or char
+'%c' % ''    # E: "%c" requires int or char
 '%c' % 'ab'  # E: "%c" requires int or char
+'%c' % b'a'
+'%c' % b''   # E: "%c" requires int or char
+'%c' % b'ab' # E: "%c" requires int or char
+[builtins_py2 fixtures/python2.pyi]
+
+[case testStringInterpolationC]
+# flags: --python-version 3.6
+'%c' % 1
+'%c' % 1.0   # E: "%c" requires int or char (expression has type "float")
+'%c' % 's'
+'%c' % ''    # E: "%c" requires int or char
+'%c' % 'ab'  # E: "%c" requires int or char
+'%c' % b'a'  # E: "%c" requires int or char (expression has type "bytes")
+'%c' % b''   # E: "%c" requires int or char (expression has type "bytes")
+'%c' % b'ab' # E: "%c" requires int or char (expression has type "bytes")
+[builtins fixtures/primitives.pyi]
+
+[case testBytesInterPolationCPython2]
+# flags: --py2 --no-strict-optional
+b'%c' % 1
+b'%c' % 1.0   # E: "%c" requires int or char (expression has type "float")
+b'%c' % 's'
+b'%c' % ''    # E: "%c" requires int or char
+b'%c' % 'ab'  # E: "%c" requires int or char
+b'%c' % b'a'
+b'%c' % b''   # E: "%c" requires int or char
+b'%c' % b'aa' # E: "%c" requires int or char
+[builtins_py2 fixtures/python2.pyi]
+
+[case testBytesInterpolationC]
+# flags: --python-version 3.6
+b'%c' % 1
+b'%c' % 1.0   # E: "%c" requires an integer in range(256) or a single byte (expression has type "float")
+b'%c' % 's'   # E: "%c" requires an integer in range(256) or a single byte (expression has type "str")
+b'%c' % ''    # E: "%c" requires an integer in range(256) or a single byte (expression has type "str")
+b'%c' % 'ab'  # E: "%c" requires an integer in range(256) or a single byte (expression has type "str")
+b'%c' % b'a'
+b'%c' % b''   # E: "%c" requires an integer in range(256) or a single byte
+b'%c' % b'aa' # E: "%c" requires an integer in range(256) or a single byte
 [builtins fixtures/primitives.pyi]
 
 [case testStringInterpolationMappingTypes]
@@ -1540,7 +1562,7 @@ x: Union[Good, Bad]
 
 class C:
     ...
-'{:c}'.format(C())  # E: Incompatible types in string interpolation (expression has type "C", placeholder has type "Union[int, float, str]")
+'{:c}'.format(C())  # E: Incompatible types in string interpolation (expression has type "C", placeholder has type "Union[int, str]")
 x: str
 '{:c}'.format(x)
 [builtins fixtures/primitives.pyi]
@@ -2085,15 +2107,7 @@ if str():
 ....a  # E: "ellipsis" has no attribute "a"
 
 class A: pass
-[file builtins.py]
-class object:
-    def __init__(self): pass
-class ellipsis:
-    def __init__(self): pass
-    __class__ = object()
-class type: pass
-class function: pass
-class str: pass
+[builtins fixtures/dict.pyi]
 [out]
 
 

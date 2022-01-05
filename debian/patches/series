@@ -1,4 +1,7 @@
+python3.10.1
+python3.10.1_part2
 verbose
 intersphinx
 issue-11355.diff
 issue-9980.diff
+psutils-in-typeshed

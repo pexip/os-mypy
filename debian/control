@@ -18,16 +18,16 @@ Build-Depends: debhelper-compat (= 11),
                python3-setuptools,
                python3-sphinx <!nodoc>,
                python3-sphinx-rtd-theme <!nodoc>,
-               python3-typed-ast (>= 1.4.0),
+               python3-typed-ast,
                python3-typed-ast (<< 1.5.0),
-               python3-types-toml,
-               python3-types-typed-ast,
+               python3-typeshed,
                python3-psutil,
                python3-mypy-extensions,
                python3-toml,
                python3-typing-extensions,
                python3-virtualenv <!nocheck>,
                python3-all-dev,
+               python3-tomli,
                python3-doc <!nodoc>,
                cython-doc <!nodoc>,
                python-six-doc <!nodoc>,
@@ -48,6 +48,7 @@ Depends: ${misc:Depends},
 Suggests: mypy-doc
 Breaks: python3-mypy (= 0.740-1)
 Replaces: python3-mypy (= 0.740-1)
+Recommends: python3-typeshed
 Description: optional static typing for Python
  Add type annotations to your Python programs, and use mypy to type check them.
  Mypy is essentially a Python linter on steroids, and it can catch many

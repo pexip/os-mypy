@@ -1,0 +1,165 @@
+From e7216905472aeed32ac6322fff7a9e51d116db6b Mon Sep 17 00:00:00 2001
+From: Marc Mueller <30130371+cdce8p@users.noreply.github.com>
+Date: Wed, 15 Dec 2021 18:36:28 +0100
+Subject: [PATCH 1/2] Fix tests for Python 3.10.1 (2)
+
+https://bugs.python.org/issue46004
+---
+ test-data/unit/fine-grained-blockers.test | 58 +++++++++++++++++++++++
+ test-data/unit/parse.test                 |  4 ++
+ 2 files changed, 62 insertions(+)
+
+--- mypy.orig/test-data/unit/fine-grained-blockers.test
++++ mypy/test-data/unit/fine-grained-blockers.test
+@@ -156,7 +156,7 @@
+ a.py:1: error: invalid syntax
+ ==
+ main:5: error: Missing positional argument "x" in call to "f" of "C"
+-[out version>=3.10]
++[out version==3.10.0]
+ ==
+ a.py:1: error: invalid syntax. Perhaps you forgot a comma?
+ ==
+@@ -176,7 +176,7 @@
+ a.py:1: error: invalid syntax
+ ==
+ main:2: error: Too many arguments for "f"
+-[out version>=3.10]
++[out version==3.10.0]
+ main:1: error: Cannot find implementation or library stub for module named "a"
+ main:1: note: See https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports
+ ==
+@@ -259,7 +259,7 @@
+ a.py:1: error: invalid syntax
+ ==
+ a.py:2: error: Missing positional argument "x" in call to "f"
+-[out version>=3.10]
++[out version==3.10.0]
+ ==
+ a.py:1: error: invalid syntax. Perhaps you forgot a comma?
+ ==
+@@ -330,7 +330,7 @@
+ main:1: error: Cannot find implementation or library stub for module named "a"
+ main:1: note: See https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports
+ b.py:1: error: Cannot find implementation or library stub for module named "a"
+-[out version>=3.10]
++[out version==3.10.0]
+ ==
+ a.py:1: error: invalid syntax. Perhaps you forgot a comma?
+ ==
+@@ -358,7 +358,7 @@
+ b.py:1: error: Cannot find implementation or library stub for module named "a"
+ b.py:1: note: See https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports
+ main:1: error: Cannot find implementation or library stub for module named "a"
+-[out version>=3.10]
++[out version==3.10.0]
+ ==
+ a.py:1: error: invalid syntax. Perhaps you forgot a comma?
+ ==
+@@ -388,7 +388,7 @@
+ ==
+ b.py:2: error: Module has no attribute "f"
+ b.py:3: error: "int" not callable
+-[out version>=3.10]
++[out version==3.10.0]
+ ==
+ a.py:1: error: invalid syntax. Perhaps you forgot a comma?
+ ==
+@@ -411,7 +411,7 @@
+ <ROOT>/test-data/unit/lib-stub/blocker.pyi:2: error: invalid syntax
+ ==
+ a.py:1: error: "int" not callable
+-[out version>=3.10]
++[out version==3.10.0]
+ ==
+ <ROOT>/test-data/unit/lib-stub/blocker.pyi:2: error: invalid syntax. Perhaps you forgot a comma?
+ ==
+@@ -490,7 +490,7 @@
+ <ROOT>/test-data/unit/lib-stub/blocker.pyi:2: error: invalid syntax
+ ==
+ a.py:2: error: "int" not callable
+-[out version>=3.10]
++[out version==3.10.0]
+ ==
+ a.py:1: error: invalid syntax. Perhaps you forgot a comma?
+ ==
+@@ -515,7 +515,7 @@
+ ==
+ b.py:2: error: Incompatible return value type (got "str", expected "int")
+ ==
+-[out version>=3.10]
++[out version==3.10.0]
+ a.py:1: error: invalid syntax. Perhaps you forgot a comma?
+ ==
+ b.py:2: error: Incompatible return value type (got "str", expected "int")
+--- mypy.orig/test-data/unit/parse.test
++++ mypy/test-data/unit/parse.test
+@@ -935,7 +935,7 @@
+ x not y
+ [out]
+ main:1: error: invalid syntax
+-[out version>=3.10]
++[out version==3.10.0]
+ main:1: error: invalid syntax. Perhaps you forgot a comma?
+ 
+ [case testNotIs]
+@@ -946,7 +946,7 @@
+ 1 ~ 2
+ [out]
+ main:1: error: invalid syntax
+-[out version>=3.10]
++[out version==3.10.0]
+ main:1: error: invalid syntax. Perhaps you forgot a comma?
+ 
+ [case testSliceInList39]
+--- mypy.orig/mypy/test/data.py
++++ mypy/mypy/test/data.py
+@@ -114,9 +114,11 @@
+                 if arg == 'skip-path-normalization':
+                     normalize_output = False
+                 if arg.startswith("version"):
+-                    if arg[7:9] != ">=":
++                    compare_op = arg[7:9]
++                    if compare_op not in {">=", "=="}:
+                         raise ValueError(
+-                            "{}, line {}: Only >= version checks are currently supported".format(
++                            "{}, line {}: Only >= and == version checks are currently supported"
++                            .format(
+                                 case.file, item.line
+                             )
+                         )
+@@ -127,9 +129,17 @@
+                         raise ValueError(
+                             '{}, line {}: "{}" is not a valid python version'.format(
+                                 case.file, item.line, version_str))
+-                    if not sys.version_info >= version:
+-                        version_check = False
+-
++                    if compare_op == ">=":
++                        version_check = sys.version_info >= version
++                    elif compare_op == "==":
++                        if not 1 < len(version) < 4:
++                            raise ValueError(
++                                '{}, line {}: Only minor or patch version checks '
++                                'are currently supported with "==": "{}"'.format(
++                                    case.file, item.line, version_str
++                                )
++                            )
++                        version_check = sys.version_info[:len(version)] == version
+             if version_check:
+                 tmp_output = [expand_variables(line) for line in item.data]
+                 if os.path.sep == '\\' and normalize_output:
+--- mypy.orig/test-data/unit/check-errorcodes.test
++++ mypy/test-data/unit/check-errorcodes.test
+@@ -34,10 +34,8 @@
+ 1 ''
+ [out]
+ main:1: error: invalid syntax  [syntax]
+-[out version>=3.10]
++[out version==3.10.0]
+ main:1: error: invalid syntax. Perhaps you forgot a comma?  [syntax]
+-[out version>=3.10.1]
+-main:1: error: invalid syntax  [syntax]
+ 
+ [case testErrorCodeSyntaxError2]
+ def f(): # E: Type signature has too many arguments  [syntax]

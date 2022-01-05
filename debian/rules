@@ -82,7 +82,7 @@ ifeq (,$(filter nocheck,$(DEB_BUILD_PROFILES)))
 	set -e; for v in $(PY3VERS); do \
 		PATH=$$PATH:$(CURDIR)/debian/mypy/usr/bin/ python$$v -m pytest -n auto \
 		-o testpaths="mypy/test mypyc/test" -o python_files=test*.py \
-		-k "not (StubtestMiscUnit or StubtestUnit or testSubclassSpecialize1 or testSubclassSpecialize2 or testMultiModuleSpecialize or testMultiModuleSpecialize_multi or testMultiModuleSpecialize_separate)" \
+		-k "not (StubtestMiscUnit or StubtestUnit or testSubclassSpecialize1 or testSubclassSpecialize2 or testMultiModuleSpecialize or testMultiModuleSpecialize_multi or testMultiModuleSpecialize_separate or testErrorOutput)" \
 		-o python_classes= -o python_functions=; \
 	done
 endif
