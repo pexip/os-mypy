@@ -484,3 +484,17 @@ reveal_type(_TYPE)  # N: Revealed type is "def (x: Any) -> builtins.type"
 _TYPE('bar')
 
 [builtins fixtures/callable.pyi]
+
+[case testClassMethodAliasStub]
+from a import f
+f("no")  # E: Argument 1 has incompatible type "str"; expected "int"
+[file a.pyi]
+from b import C
+f = C.f
+[file b.pyi]
+import a
+class C(B):
+    @classmethod
+    def f(self, x: int) -> C: ...
+class B: ...
+[builtins fixtures/classmethod.pyi]
