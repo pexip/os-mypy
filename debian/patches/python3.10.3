@@ -1,0 +1,33 @@
+From: Stanislav Levin <slev@altlinux.org>
+Date: Fri, 25 Mar 2022 18:54:03 +0300
+Subject: testcmdline: Sync assumption about error message for Python 3.10.3
+ (#12452)
+
+Python 3.10.3 is more correct about syntax error for
+`mypy` test case `testBlocker`.
+
+See https://bugs.python.org/issue46240 for details.
+
+Closes #12451
+
+Signed-off-by: Stanislav Levin <slev@altlinux.org>
+Bug-Upstream: https://github.com/python/mypy/issues/12451
+Bug-Debian: https://bugs.debian.org/1008259
+Origin: upstream, https://github.com/python/mypy/commit/6b0e8485ac20a15fb7ad8762e14315c9e9bdc349
+---
+ test-data/unit/cmdline.test | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+--- mypy.orig/test-data/unit/cmdline.test
++++ mypy/test-data/unit/cmdline.test
+@@ -1262,6 +1262,10 @@
+ pkg/x.py:1: error: invalid syntax
+ Found 1 error in 1 file (errors prevented further checking)
+ == Return code: 2
++[out version>=3.10.3]
++pkg/x.py:1: error: invalid syntax
++Found 1 error in 1 file (errors prevented further checking)
++== Return code: 2
+ 
+ [case testCmdlinePackageAndFile]
+ # cmd: mypy -p pkg file

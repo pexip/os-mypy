@@ -1,0 +1,12 @@
+extensions/mypy_extensions.egg-info/
+.mypy_cache/
+.pytest_cache/
+docs/build/
+mypy/__pycache__/
+test-data/packages/typedpkg/build/
+test-data/packages/typedpkg/dist/
+test-data/packages/typedpkg/typedpkg.egg-info/
+debian/*_options.rst
+debian/dmypy.1
+debian/mypy.1
+debian/stubgen.1

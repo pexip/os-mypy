@@ -1,0 +1,21 @@
+From: "Michael R. Crusoe" <crusoe@debian.org>
+Date: Sat, 2 Apr 2022 17:49:43 -0400
+Subject: make the build more verbose
+
+Forwarded: not-needed
+---
+ setup.py | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/setup.py b/setup.py
+index 233ad30..2c12231 100644
+--- a/setup.py
++++ b/setup.py
+@@ -155,6 +155,7 @@ if USE_MYPYC:
+         # Use multi-file compilation mode on windows because without it
+         # our Appveyor builds run out of memory sometimes.
+         multi_file=sys.platform == 'win32' or force_multifile,
++        verbose=True,
+     )
+ else:
+     ext_modules = []

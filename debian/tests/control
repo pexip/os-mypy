@@ -1,0 +1,3 @@
+Tests: run-unit-test
+Depends: mypy, python3-typeshed, python3-pytest-xdist, python3-virtualenv, python3-lxml
+Restrictions: allow-stderr
