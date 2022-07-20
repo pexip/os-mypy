@@ -1,3 +1,9 @@
+mypy (0.961-1pexip1) pexip-bullseye; urgency=medium
+
+  * Backport current version from bookworm.
+
+ -- Mark Hymers <mark.hymers@pexip.com>  Wed, 20 Jul 2022 09:56:51 +0100
+
 mypy (0.961-1) unstable; urgency=medium
 
   * New upstream version
