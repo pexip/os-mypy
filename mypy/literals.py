@@ -8,7 +8,8 @@ from mypy.nodes import (
     ConditionalExpr, EllipsisExpr, YieldFromExpr, YieldExpr, RevealExpr, SuperExpr,
     TypeApplication, LambdaExpr, ListComprehension, SetComprehension, DictionaryComprehension,
     GeneratorExpr, BackquoteExpr, TypeVarExpr, TypeAliasExpr, NamedTupleExpr, EnumCallExpr,
-    TypedDictExpr, NewTypeExpr, PromoteExpr, AwaitExpr, TempNode, AssignmentExpr, ParamSpecExpr
+    TypedDictExpr, NewTypeExpr, PromoteExpr, AwaitExpr, TempNode, AssignmentExpr, ParamSpecExpr,
+    AssertTypeExpr, TypeVarTupleExpr,
 )
 from mypy.visitor import ExpressionVisitor
 
@@ -60,6 +61,9 @@ def literal(e: Expression) -> int:
 
     elif isinstance(e, (MemberExpr, UnaryExpr, StarExpr)):
         return literal(e.expr)
+
+    elif isinstance(e, AssignmentExpr):
+        return literal(e.target)
 
     elif isinstance(e, IndexExpr):
         if literal(e.index) == LITERAL_YES:
@@ -160,8 +164,8 @@ class _Hasher(ExpressionVisitor[Optional[Key]]):
             return ('Index', literal_hash(e.base), literal_hash(e.index))
         return None
 
-    def visit_assignment_expr(self, e: AssignmentExpr) -> None:
-        return None
+    def visit_assignment_expr(self, e: AssignmentExpr) -> Optional[Key]:
+        return literal_hash(e.target)
 
     def visit_call_expr(self, e: CallExpr) -> None:
         return None
@@ -170,6 +174,9 @@ class _Hasher(ExpressionVisitor[Optional[Key]]):
         return None
 
     def visit_cast_expr(self, e: CastExpr) -> None:
+        return None
+
+    def visit_assert_type_expr(self, e: AssertTypeExpr) -> None:
         return None
 
     def visit_conditional_expr(self, e: ConditionalExpr) -> None:
@@ -215,6 +222,9 @@ class _Hasher(ExpressionVisitor[Optional[Key]]):
         return None
 
     def visit_paramspec_expr(self, e: ParamSpecExpr) -> None:
+        return None
+
+    def visit_type_var_tuple_expr(self, e: TypeVarTupleExpr) -> None:
         return None
 
     def visit_type_alias_expr(self, e: TypeAliasExpr) -> None:

@@ -1,15 +1,14 @@
 Metadata-Version: 2.1
 Name: mypy
-Version: 0.921
+Version: 0.961
 Summary: Optional static typing for Python
 Home-page: http://www.mypy-lang.org/
 Author: Jukka Lehtosalo
 Author-email: jukka.lehtosalo@iki.fi
 License: MIT License
 Project-URL: News, http://mypy-lang.org/news.html
-Project-URL: Documentation, https://mypy.readthedocs.io/en/stable/introduction.html
+Project-URL: Documentation, https://mypy.readthedocs.io/en/stable/index.html
 Project-URL: Repository, https://github.com/python/mypy
-Platform: UNKNOWN
 Classifier: Development Status :: 4 - Beta
 Classifier: Environment :: Console
 Classifier: Intended Audience :: Developers
@@ -24,6 +23,7 @@ Classifier: Topic :: Software Development
 Requires-Python: >=3.6
 Provides-Extra: dmypy
 Provides-Extra: python2
+Provides-Extra: reports
 License-File: LICENSE
 
 Mypy -- Optional Static Typing for Python
@@ -35,5 +35,3 @@ can catch many programming errors by analyzing your program, without
 actually having to run it.  Mypy has a powerful type system with
 features such as type inference, gradual typing, generics and union
 types.
-
-

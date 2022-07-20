@@ -14,9 +14,9 @@ Also build a mapping from mypy TypeInfos to ClassIR objects.
 from typing import List, Dict, Iterable, Optional, Union, DefaultDict, NamedTuple, Tuple
 
 from mypy.nodes import (
-    MypyFile, TypeInfo, FuncDef, ClassDef, Decorator, OverloadedFuncDef, MemberExpr, Var,
-    Expression, SymbolNode, ARG_STAR, ARG_STAR2, CallExpr, Decorator, Expression, FuncDef,
-    MemberExpr, MypyFile, NameExpr, RefExpr, TypeInfo,
+    ClassDef, OverloadedFuncDef, Var,
+    SymbolNode, ARG_STAR, ARG_STAR2, CallExpr, Decorator, Expression, FuncDef,
+    MemberExpr, MypyFile, NameExpr, RefExpr, TypeInfo
 )
 from mypy.types import Type, Instance, get_proper_type
 from mypy.build import Graph
@@ -142,7 +142,7 @@ def prepare_method_def(ir: ClassIR, module_name: str, cdef: ClassDef, mapper: Ma
             ir.method_decls[PROPSET_PREFIX + node.name] = decl
 
         if node.func.is_property:
-            assert node.func.type
+            assert node.func.type, f"Expected return type annotation for property '{node.name}'"
             decl.is_prop_getter = True
             ir.property_types[node.name] = decl.sig.ret_type
 

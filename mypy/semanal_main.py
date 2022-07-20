@@ -24,15 +24,15 @@ deferral if they can't be satisfied. Initially every module in the SCC
 will be incomplete.
 """
 
-import contextlib
-from typing import List, Tuple, Optional, Union, Callable, Iterator
-from typing_extensions import TYPE_CHECKING
+from typing import List, Tuple, Optional, Union, Callable
+from typing_extensions import TYPE_CHECKING, Final, TypeAlias as _TypeAlias
 
+from mypy.backports import nullcontext
 from mypy.nodes import (
     MypyFile, TypeInfo, FuncDef, Decorator, OverloadedFuncDef, Var
 )
 from mypy.semanal_typeargs import TypeArgumentAnalyzer
-from mypy.state import strict_optional_set
+import mypy.state
 from mypy.semanal import (
     SemanticAnalyzer, apply_semantic_analyzer_patches, remove_imported_names_from_symtable
 )
@@ -45,22 +45,24 @@ from mypy.semanal_infer import infer_decorator_signature_if_simple
 from mypy.checker import FineGrainedDeferredNode
 from mypy.server.aststrip import SavedAttributes
 from mypy.util import is_typeshed_file
+from mypy.options import Options
+from mypy.plugin import ClassDefContext
 import mypy.build
 
 if TYPE_CHECKING:
     from mypy.build import Graph, State
 
 
-Patches = List[Tuple[int, Callable[[], None]]]
+Patches: _TypeAlias = List[Tuple[int, Callable[[], None]]]
 
 
 # If we perform this many iterations, raise an exception since we are likely stuck.
-MAX_ITERATIONS = 20
+MAX_ITERATIONS: Final = 20
 
 
 # Number of passes over core modules before going on to the rest of the builtin SCC.
-CORE_WARMUP = 2
-core_modules = ['typing', 'builtins', 'abc', 'collections']
+CORE_WARMUP: Final = 2
+core_modules: Final = ['typing', 'builtins', 'abc', 'collections']
 
 
 def semantic_analysis_for_scc(graph: 'Graph', scc: List[str], errors: Errors) -> None:
@@ -80,7 +82,9 @@ def semantic_analysis_for_scc(graph: 'Graph', scc: List[str], errors: Errors) ->
     # We use patch callbacks to fix up things when we expect relatively few
     # callbacks to be required.
     apply_semantic_analyzer_patches(patches)
-    # This pass might need fallbacks calculated above.
+    # Run class decorator hooks (they requite complete MROs and no placeholders).
+    apply_class_plugin_hooks(graph, scc, errors)
+    # This pass might need fallbacks calculated above and the results of hooks.
     check_type_arguments(graph, scc, errors)
     calculate_class_properties(graph, scc, errors)
     check_blockers(graph, scc)
@@ -129,7 +133,7 @@ def semantic_analysis_for_targets(
         process_top_level_function(analyzer, state, state.id,
                                    n.node.fullname, n.node, n.active_typeinfo, patches)
     apply_semantic_analyzer_patches(patches)
-
+    apply_class_plugin_hooks(graph, [state.id], state.manager.errors)
     check_type_arguments_in_targets(nodes, state, state.manager.errors)
     calculate_class_properties(graph, [state.id], state.manager.errors)
 
@@ -249,7 +253,7 @@ def process_top_level_function(analyzer: 'SemanticAnalyzer',
     """Analyze single top-level function or method.
 
     Process the body of the function (including nested functions) again and again,
-    until all names have been resolved (ot iteration limit reached).
+    until all names have been resolved (or iteration limit reached).
     """
     # We need one more iteration after incomplete is False (e.g. to report errors, if any).
     final_iteration = False
@@ -307,7 +311,7 @@ def semantic_analyze_target(target: str,
     Return tuple with these items:
     - list of deferred targets
     - was some definition incomplete (need to run another pass)
-    - were any new names were defined (or placeholders replaced)
+    - were any new names defined (or placeholders replaced)
     """
     state.manager.processed_targets.append(target)
     tree = state.tree
@@ -356,7 +360,7 @@ def check_type_arguments(graph: 'Graph', scc: List[str], errors: Errors) -> None
                                         state.options,
                                         is_typeshed_file(state.path or ''))
         with state.wrap_context():
-            with strict_optional_set(state.options.strict_optional):
+            with mypy.state.state.strict_optional_set(state.options.strict_optional):
                 state.tree.accept(analyzer)
 
 
@@ -371,25 +375,73 @@ def check_type_arguments_in_targets(targets: List[FineGrainedDeferredNode], stat
                                     state.options,
                                     is_typeshed_file(state.path or ''))
     with state.wrap_context():
-        with strict_optional_set(state.options.strict_optional):
+        with mypy.state.state.strict_optional_set(state.options.strict_optional):
             for target in targets:
                 func: Optional[Union[FuncDef, OverloadedFuncDef]] = None
                 if isinstance(target.node, (FuncDef, OverloadedFuncDef)):
                     func = target.node
                 saved = (state.id, target.active_typeinfo, func)  # module, class, function
-                with errors.scope.saved_scope(saved) if errors.scope else nothing():
+                with errors.scope.saved_scope(saved) if errors.scope else nullcontext():
                     analyzer.recurse_into_functions = func is not None
                     target.node.accept(analyzer)
 
 
+def apply_class_plugin_hooks(graph: 'Graph', scc: List[str], errors: Errors) -> None:
+    """Apply class plugin hooks within a SCC.
+
+    We run these after to the main semantic analysis so that the hooks
+    don't need to deal with incomplete definitions such as placeholder
+    types.
+
+    Note that some hooks incorrectly run during the main semantic
+    analysis pass, for historical reasons.
+    """
+    num_passes = 0
+    incomplete = True
+    # If we encounter a base class that has not been processed, we'll run another
+    # pass. This should eventually reach a fixed point.
+    while incomplete:
+        assert num_passes < 10, "Internal error: too many class plugin hook passes"
+        num_passes += 1
+        incomplete = False
+        for module in scc:
+            state = graph[module]
+            tree = state.tree
+            assert tree
+            for _, node, _ in tree.local_definitions():
+                if isinstance(node.node, TypeInfo):
+                    if not apply_hooks_to_class(state.manager.semantic_analyzer,
+                                                module, node.node, state.options, tree, errors):
+                        incomplete = True
+
+
+def apply_hooks_to_class(self: SemanticAnalyzer,
+                         module: str,
+                         info: TypeInfo,
+                         options: Options,
+                         file_node: MypyFile,
+                         errors: Errors) -> bool:
+    # TODO: Move more class-related hooks here?
+    defn = info.defn
+    ok = True
+    for decorator in defn.decorators:
+        with self.file_context(file_node, options, info):
+            decorator_name = self.get_fullname_for_hook(decorator)
+            if decorator_name:
+                hook = self.plugin.get_class_decorator_hook_2(decorator_name)
+                if hook:
+                    ok = ok and hook(ClassDefContext(defn, decorator, self))
+    return ok
+
+
 def calculate_class_properties(graph: 'Graph', scc: List[str], errors: Errors) -> None:
     for module in scc:
-        tree = graph[module].tree
+        state = graph[module]
+        tree = state.tree
         assert tree
         for _, node, _ in tree.local_definitions():
             if isinstance(node.node, TypeInfo):
-                saved = (module, node.node, None)  # module, class, function
-                with errors.scope.saved_scope(saved) if errors.scope else nothing():
+                with state.manager.semantic_analyzer.file_context(tree, state.options, node.node):
                     calculate_class_abstract_status(node.node, tree.is_stub, errors)
                     check_protocol_status(node.node, errors)
                     calculate_class_vars(node.node)
@@ -399,8 +451,3 @@ def calculate_class_properties(graph: 'Graph', scc: List[str], errors: Errors) -
 def check_blockers(graph: 'Graph', scc: List[str]) -> None:
     for module in scc:
         graph[module].check_blockers()
-
-
-@contextlib.contextmanager
-def nothing() -> Iterator[None]:
-    yield

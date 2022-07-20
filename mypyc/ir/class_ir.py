@@ -75,6 +75,7 @@ VTableMethod = NamedTuple(
                      ('method', FuncIR),
                      ('shadow_method', Optional[FuncIR])])
 
+
 VTableEntries = List[VTableMethod]
 
 
@@ -121,7 +122,7 @@ class ClassIR:
         # Map of methods that are actually present in an extension class
         self.methods: OrderedDict[str, FuncIR] = OrderedDict()
         # Glue methods for boxing/unboxing when a class changes the type
-        # while overriding a method. Maps from (parent class overrided, method)
+        # while overriding a method. Maps from (parent class overridden, method)
         # to IR of glue method.
         self.glue_methods: Dict[Tuple[ClassIR, str], FuncIR] = OrderedDict()
 
@@ -152,9 +153,17 @@ class ClassIR:
         # None if separate compilation prevents this from working
         self.children: Optional[List[ClassIR]] = []
 
+    def __repr__(self) -> str:
+        return (
+            "ClassIR("
+            "name={self.name}, module_name={self.module_name}, "
+            "is_trait={self.is_trait}, is_generated={self.is_generated}, "
+            "is_abstract={self.is_abstract}, is_ext_class={self.is_ext_class}"
+            ")".format(self=self))
+
     @property
     def fullname(self) -> str:
-        return "{}.{}".format(self.module_name, self.name)
+        return f"{self.module_name}.{self.name}"
 
     def real_base(self) -> Optional['ClassIR']:
         """Return the actual concrete base class, if there is one."""
@@ -164,7 +173,7 @@ class ClassIR:
 
     def vtable_entry(self, name: str) -> int:
         assert self.vtable is not None, "vtable not computed yet"
-        assert name in self.vtable, '%r has no attribute %r' % (self.name, name)
+        assert name in self.vtable, f'{self.name!r} has no attribute {name!r}'
         return self.vtable[name]
 
     def attr_details(self, name: str) -> Tuple[RType, 'ClassIR']:
@@ -173,7 +182,7 @@ class ClassIR:
                 return ir.attributes[name], ir
             if name in ir.property_types:
                 return ir.property_types[name], ir
-        raise KeyError('%r has no attribute %r' % (self.name, name))
+        raise KeyError(f'{self.name!r} has no attribute {name!r}')
 
     def attr_type(self, name: str) -> RType:
         return self.attr_details(name)[0]
@@ -182,7 +191,7 @@ class ClassIR:
         for ir in self.mro:
             if name in ir.method_decls:
                 return ir.method_decls[name]
-        raise KeyError('%r has no attribute %r' % (self.name, name))
+        raise KeyError(f'{self.name!r} has no attribute {name!r}')
 
     def method_sig(self, name: str) -> FuncSignature:
         return self.method_decl(name).sig
@@ -226,7 +235,7 @@ class ClassIR:
         return names.private_name(self.module_name, self.name)
 
     def struct_name(self, names: NameGenerator) -> str:
-        return '{}Object'.format(exported_name(self.fullname))
+        return f'{exported_name(self.fullname)}Object'
 
     def get_method_and_class(self, name: str) -> Optional[Tuple[FuncIR, 'ClassIR']]:
         for ir in self.mro:
@@ -317,6 +326,7 @@ class ClassIR:
             'children': [
                 cir.fullname for cir in self.children
             ] if self.children is not None else None,
+            'deletable': self.deletable,
         }
 
     @classmethod
@@ -365,6 +375,7 @@ class ClassIR:
         ir.mro = [ctx.classes[s] for s in data['mro']]
         ir.base_mro = [ctx.classes[s] for s in data['base_mro']]
         ir.children = data['children'] and [ctx.classes[s] for s in data['children']]
+        ir.deletable = data['deletable']
 
         return ir
 

@@ -15,8 +15,9 @@ import re
 from typing import (
     cast, List, Tuple, Dict, Callable, Union, Optional, Pattern, Match, Set
 )
-from typing_extensions import Final, TYPE_CHECKING
+from typing_extensions import Final, TYPE_CHECKING, TypeAlias as _TypeAlias
 
+from mypy.errors import Errors
 from mypy.types import (
     Type, AnyType, TupleType, Instance, UnionType, TypeOfAny, get_proper_type, TypeVarType,
     LiteralType, get_proper_types
@@ -39,9 +40,9 @@ from mypy.typeops import custom_special_method
 from mypy.subtypes import is_subtype
 from mypy.parse import parse
 
-FormatStringExpr = Union[StrExpr, BytesExpr, UnicodeExpr]
-Checkers = Tuple[Callable[[Expression], None], Callable[[Type], bool]]
-MatchMap = Dict[Tuple[int, int], Match[str]]  # span -> match
+FormatStringExpr: _TypeAlias = Union[StrExpr, BytesExpr, UnicodeExpr]
+Checkers: _TypeAlias = Tuple[Callable[[Expression], None], Callable[[Type], bool]]
+MatchMap: _TypeAlias = Dict[Tuple[int, int], Match[str]]  # span -> match
 
 
 def compile_format_re() -> Pattern[str]:
@@ -316,7 +317,7 @@ class StringFormatterChecker:
         assert len(replacements) == len(specs)
         for spec, repl in zip(specs, replacements):
             repl = self.apply_field_accessors(spec, repl, ctx=call)
-            actual_type = repl.type if isinstance(repl, TempNode) else self.chk.type_map.get(repl)
+            actual_type = repl.type if isinstance(repl, TempNode) else self.chk.lookup_type(repl)
             assert actual_type is not None
 
             # Special case custom formatting.
@@ -369,7 +370,7 @@ class StringFormatterChecker:
         if spec.conv_type == 'c':
             if isinstance(repl, (StrExpr, BytesExpr)) and len(repl.value) != 1:
                 self.msg.requires_int_or_char(call, format_call=True)
-            c_typ = get_proper_type(self.chk.type_map[repl])
+            c_typ = get_proper_type(self.chk.lookup_type(repl))
             if isinstance(c_typ, Instance) and c_typ.last_known_value:
                 c_typ = c_typ.last_known_value
             if isinstance(c_typ, LiteralType) and isinstance(c_typ.value, str):
@@ -380,8 +381,9 @@ class StringFormatterChecker:
                 if (has_type_component(actual_type, 'builtins.bytes') and
                         not custom_special_method(actual_type, '__str__')):
                     self.msg.fail(
-                        "On Python 3 '{}'.format(b'abc') produces \"b'abc'\", not 'abc'; "
-                        "use '{!r}'.format(b'abc') if this is desired behavior",
+                        'On Python 3 formatting "b\'abc\'" with "{}" '
+                        'produces "b\'abc\'", not "abc"; '
+                        'use "{!r}" if this is desired behavior',
                         call, code=codes.STR_BYTES_PY3)
         if spec.flags:
             numeric_types = UnionType([self.named_type('builtins.int'),
@@ -440,7 +442,7 @@ class StringFormatterChecker:
 
         # Fall back to *args when present in call.
         star_arg = star_args[0]
-        varargs_type = get_proper_type(self.chk.type_map[star_arg])
+        varargs_type = get_proper_type(self.chk.lookup_type(star_arg))
         if (not isinstance(varargs_type, Instance) or not
                 varargs_type.type.has_base('typing.Sequence')):
             # Error should be already reported.
@@ -463,7 +465,7 @@ class StringFormatterChecker:
         if not star_args_2:
             return None
         star_arg_2 = star_args_2[0]
-        kwargs_type = get_proper_type(self.chk.type_map[star_arg_2])
+        kwargs_type = get_proper_type(self.chk.lookup_type(star_arg_2))
         if (not isinstance(kwargs_type, Instance) or not
                 kwargs_type.type.has_base('typing.Mapping')):
             # Error should be already reported.
@@ -511,14 +513,13 @@ class StringFormatterChecker:
             return repl
         assert spec.field
 
-        # This is a bit of a dirty trick, but it looks like this is the simplest way.
-        temp_errors = self.msg.clean_copy().errors
+        temp_errors = Errors()
         dummy = DUMMY_FIELD_NAME + spec.field[len(spec.key):]
         temp_ast: Node = parse(
             dummy, fnam="<format>", module=None, options=self.chk.options, errors=temp_errors
         )
         if temp_errors.is_errors():
-            self.msg.fail('Syntax error in format specifier "{}"'.format(spec.field),
+            self.msg.fail(f'Syntax error in format specifier "{spec.field}"',
                           ctx, code=codes.STRING_FORMATTING)
             return TempNode(AnyType(TypeOfAny.from_error))
 
@@ -659,7 +660,12 @@ class StringFormatterChecker:
             rep_types = [rhs_type]
 
         if len(checkers) > len(rep_types):
-            self.msg.too_few_string_formatting_arguments(replacements)
+            # Only check the fix-length Tuple type. Other Iterable types would skip.
+            if (is_subtype(rhs_type, self.chk.named_type("typing.Iterable")) and
+                    not isinstance(rhs_type, TupleType)):
+                return
+            else:
+                self.msg.too_few_string_formatting_arguments(replacements)
         elif len(checkers) < len(rep_types):
             self.msg.too_many_string_formatting_arguments(replacements)
         else:
@@ -712,7 +718,7 @@ class StringFormatterChecker:
                 self.chk.check_subtype(rep_type, expected_type, replacements,
                                        message_registry.INCOMPATIBLE_TYPES_IN_STR_INTERPOLATION,
                                        'expression has type',
-                                       'placeholder with key \'%s\' has type' % specifier.key,
+                                       f'placeholder with key \'{specifier.key}\' has type',
                                        code=codes.STRING_FORMATTING)
                 if specifier.conv_type == 's':
                     self.check_s_special_cases(expr, rep_type, expr)
@@ -836,8 +842,9 @@ class StringFormatterChecker:
             if self.chk.options.python_version >= (3, 0):
                 if has_type_component(typ, 'builtins.bytes'):
                     self.msg.fail(
-                        "On Python 3 '%s' % b'abc' produces \"b'abc'\", not 'abc'; "
-                        "use '%r' % b'abc' if this is desired behavior",
+                        'On Python 3 formatting "b\'abc\'" with "%s" '
+                        'produces "b\'abc\'", not "abc"; '
+                        'use "%r" if this is desired behavior',
                         context, code=codes.STR_BYTES_PY3)
                     return False
             if self.chk.options.python_version < (3, 0):

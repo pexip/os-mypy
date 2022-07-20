@@ -117,16 +117,6 @@ def transform_decorator(builder: IRBuilder, dec: Decorator) -> None:
     builder.functions.append(func_ir)
 
 
-def transform_method(builder: IRBuilder,
-                     cdef: ClassDef,
-                     non_ext: Optional[NonExtClassInfo],
-                     fdef: FuncDef) -> None:
-    if non_ext:
-        handle_non_ext_method(builder, non_ext, cdef, fdef)
-    else:
-        handle_ext_method(builder, cdef, fdef)
-
-
 def transform_lambda_expr(builder: IRBuilder, expr: LambdaExpr) -> Value:
     typ = get_proper_type(builder.types[expr])
     assert isinstance(typ, CallableType)
@@ -140,7 +130,7 @@ def transform_lambda_expr(builder: IRBuilder, expr: LambdaExpr) -> Value:
 
     fsig = FuncSignature(runtime_args, ret_type)
 
-    fname = '{}{}'.format(LAMBDA_NAME, builder.lambda_counter)
+    fname = f'{LAMBDA_NAME}{builder.lambda_counter}'
     builder.lambda_counter += 1
     func_ir, func_reg = gen_func_item(builder, expr, fname, fsig)
     assert func_reg is not None
@@ -978,26 +968,24 @@ def generate_singledispatch_callable_class_ctor(builder: IRBuilder) -> None:
     """Create an __init__ that sets registry and dispatch_cache to empty dicts"""
     line = -1
     class_ir = builder.fn_info.callable_class.ir
-    builder.enter_method(class_ir, '__init__', bool_rprimitive)
-    empty_dict = builder.call_c(dict_new_op, [], line)
-    builder.add(SetAttr(builder.self(), 'registry', empty_dict, line))
-    cache_dict = builder.call_c(dict_new_op, [], line)
-    dispatch_cache_str = builder.load_str('dispatch_cache')
-    # use the py_setattr_op instead of SetAttr so that it also gets added to our __dict__
-    builder.call_c(py_setattr_op, [builder.self(), dispatch_cache_str, cache_dict], line)
-    # the generated C code seems to expect that __init__ returns a char, so just return 1
-    builder.add(Return(Integer(1, bool_rprimitive, line), line))
-    builder.leave_method()
+    with builder.enter_method(class_ir, '__init__', bool_rprimitive):
+        empty_dict = builder.call_c(dict_new_op, [], line)
+        builder.add(SetAttr(builder.self(), 'registry', empty_dict, line))
+        cache_dict = builder.call_c(dict_new_op, [], line)
+        dispatch_cache_str = builder.load_str('dispatch_cache')
+        # use the py_setattr_op instead of SetAttr so that it also gets added to our __dict__
+        builder.call_c(py_setattr_op, [builder.self(), dispatch_cache_str, cache_dict], line)
+        # the generated C code seems to expect that __init__ returns a char, so just return 1
+        builder.add(Return(Integer(1, bool_rprimitive, line), line))
 
 
 def add_register_method_to_callable_class(builder: IRBuilder, fn_info: FuncInfo) -> None:
     line = -1
-    builder.enter_method(fn_info.callable_class.ir, 'register', object_rprimitive)
-    cls_arg = builder.add_argument('cls', object_rprimitive)
-    func_arg = builder.add_argument('func', object_rprimitive, ArgKind.ARG_OPT)
-    ret_val = builder.call_c(register_function, [builder.self(), cls_arg, func_arg], line)
-    builder.add(Return(ret_val, line))
-    builder.leave_method()
+    with builder.enter_method(fn_info.callable_class.ir, 'register', object_rprimitive):
+        cls_arg = builder.add_argument('cls', object_rprimitive)
+        func_arg = builder.add_argument('func', object_rprimitive, ArgKind.ARG_OPT)
+        ret_val = builder.call_c(register_function, [builder.self(), cls_arg, func_arg], line)
+        builder.add(Return(ret_val, line))
 
 
 def load_singledispatch_registry(builder: IRBuilder, dispatch_func_obj: Value, line: int) -> Value:
@@ -1005,7 +993,7 @@ def load_singledispatch_registry(builder: IRBuilder, dispatch_func_obj: Value, l
 
 
 def singledispatch_main_func_name(orig_name: str) -> str:
-    return '__mypyc_singledispatch_main_function_{}__'.format(orig_name)
+    return f'__mypyc_singledispatch_main_function_{orig_name}__'
 
 
 def get_registry_identifier(fitem: FuncDef) -> str:

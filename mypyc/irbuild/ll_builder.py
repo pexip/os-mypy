@@ -39,11 +39,11 @@ from mypyc.ir.rtypes import (
 from mypyc.ir.func_ir import FuncDecl, FuncSignature
 from mypyc.ir.class_ir import ClassIR, all_concrete_classes
 from mypyc.common import (
-    FAST_ISINSTANCE_MAX_SUBCLASSES, MAX_LITERAL_SHORT_INT, PLATFORM_SIZE, use_vectorcall,
-    use_method_vectorcall
+    FAST_ISINSTANCE_MAX_SUBCLASSES, MAX_LITERAL_SHORT_INT, MIN_LITERAL_SHORT_INT, PLATFORM_SIZE,
+    use_vectorcall, use_method_vectorcall
 )
 from mypyc.primitives.registry import (
-    method_call_ops, CFunctionDescription, function_ops,
+    method_call_ops, CFunctionDescription,
     binary_ops, unary_ops, ERR_NEG_INT
 )
 from mypyc.primitives.bytes_ops import bytes_compare
@@ -149,6 +149,8 @@ class LowLevelIRBuilder:
 
     def box(self, src: Value) -> Value:
         if src.type.is_unboxed:
+            if isinstance(src, Integer) and is_tagged(src.type):
+                return self.add(LoadLiteral(src.value >> 1, rtype=object_rprimitive))
             return self.add(Box(src))
         else:
             return src
@@ -789,7 +791,7 @@ class LowLevelIRBuilder:
 
     def load_int(self, value: int) -> Value:
         """Load a tagged (Python) integer literal value."""
-        if abs(value) > MAX_LITERAL_SHORT_INT:
+        if value > MAX_LITERAL_SHORT_INT or value < MIN_LITERAL_SHORT_INT:
             return self.add(LoadLiteral(value, int_rprimitive))
         else:
             return Integer(value)
@@ -819,7 +821,7 @@ class LowLevelIRBuilder:
                             line: int = -1,
                             error_msg: Optional[str] = None) -> Value:
         if error_msg is None:
-            error_msg = 'name "{}" is not defined'.format(identifier)
+            error_msg = f'name "{identifier}" is not defined'
         ok_block, error_block = BasicBlock(), BasicBlock()
         value = self.add(LoadStatic(typ, identifier, module_name, namespace, line=line))
         self.add(Branch(value, error_block, ok_block, Branch.IS_ERROR, rare=True))
@@ -836,7 +838,7 @@ class LowLevelIRBuilder:
 
     def get_native_type(self, cls: ClassIR) -> Value:
         """Load native type object."""
-        fullname = '%s.%s' % (cls.module_name, cls.name)
+        fullname = f'{cls.module_name}.{cls.name}'
         return self.load_native_type_object(fullname)
 
     def load_native_type_object(self, fullname: str) -> Value:
@@ -1186,15 +1188,6 @@ class LowLevelIRBuilder:
     def new_set_op(self, values: List[Value], line: int) -> Value:
         return self.call_c(new_set_op, values, line)
 
-    def builtin_call(self,
-                     args: List[Value],
-                     fn_op: str,
-                     line: int) -> Value:
-        call_c_ops_candidates = function_ops.get(fn_op, [])
-        target = self.matching_call_c(call_c_ops_candidates, args, line)
-        assert target, 'Unsupported builtin function: %s' % fn_op
-        return target
-
     def shortcircuit_helper(self, op: str,
                             expr_type: RType,
                             left: Callable[[], Value],
@@ -1339,7 +1332,7 @@ class LowLevelIRBuilder:
             if all(is_subtype(actual.type, formal)
                    for actual, formal in zip(args, desc.arg_types)):
                 if matching:
-                    assert matching.priority != desc.priority, 'Ambiguous:\n1) %s\n2) %s' % (
+                    assert matching.priority != desc.priority, 'Ambiguous:\n1) {}\n2) {}'.format(
                         matching, desc)
                     if desc.priority > matching.priority:
                         matching = desc

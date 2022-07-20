@@ -5,7 +5,7 @@ import time
 import shutil
 import contextlib
 
-from typing import List, Iterable, Dict, Tuple, Callable, Any, Iterator, Union
+from typing import List, Iterable, Dict, Tuple, Callable, Any, Iterator, Union, Pattern
 
 from mypy import defaults
 import mypy.api as api
@@ -79,7 +79,7 @@ def assert_string_arrays_equal(expected: List[str], actual: List[str],
             if i >= len(actual) or expected[i] != actual[i]:
                 if first_diff < 0:
                     first_diff = i
-                sys.stderr.write('  {:<45} (diff)'.format(expected[i]))
+                sys.stderr.write(f'  {expected[i]:<45} (diff)')
             else:
                 e = expected[i]
                 sys.stderr.write('  ' + e[:width])
@@ -96,7 +96,7 @@ def assert_string_arrays_equal(expected: List[str], actual: List[str],
 
         for j in range(num_skip_start, len(actual) - num_skip_end):
             if j >= len(expected) or expected[j] != actual[j]:
-                sys.stderr.write('  {:<45} (diff)'.format(actual[j]))
+                sys.stderr.write(f'  {actual[j]:<45} (diff)')
             else:
                 a = actual[j]
                 sys.stderr.write('  ' + a[:width])
@@ -217,8 +217,8 @@ def show_align_message(s1: str, s2: str) -> None:
         extra = '...'
 
     # Write a chunk of both lines, aligned.
-    sys.stderr.write('  E: {}{}\n'.format(s1[:maxw], extra))
-    sys.stderr.write('  A: {}{}\n'.format(s2[:maxw], extra))
+    sys.stderr.write(f'  E: {s1[:maxw]}{extra}\n')
+    sys.stderr.write(f'  A: {s2[:maxw]}{extra}\n')
     # Write an indicator character under the different columns.
     sys.stderr.write('     ')
     for j in range(min(maxw, max(len(s1), len(s2)))):
@@ -287,6 +287,8 @@ def num_skipped_suffix_lines(a1: List[str], a2: List[str]) -> int:
 def testfile_pyversion(path: str) -> Tuple[int, int]:
     if path.endswith('python2.test'):
         return defaults.PYTHON2_VERSION
+    elif path.endswith('python310.test'):
+        return 3, 10
     else:
         return defaults.PYTHON3_VERSION
 
@@ -368,7 +370,7 @@ def parse_options(program_text: str, testcase: DataDrivenTestCase,
     options = Options()
     flags = re.search('# flags: (.*)$', program_text, flags=re.MULTILINE)
     if incremental_step > 1:
-        flags2 = re.search('# flags{}: (.*)$'.format(incremental_step), program_text,
+        flags2 = re.search(f'# flags{incremental_step}: (.*)$', program_text,
                            flags=re.MULTILINE)
         if flags2:
             flags = flags2
@@ -406,7 +408,7 @@ def split_lines(*streams: bytes) -> List[str]:
     ]
 
 
-def copy_and_fudge_mtime(source_path: str, target_path: str) -> None:
+def write_and_fudge_mtime(content: str, target_path: str) -> None:
     # In some systems, mtime has a resolution of 1 second which can
     # cause annoying-to-debug issues when a file has the same size
     # after a change. We manually set the mtime to circumvent this.
@@ -418,8 +420,10 @@ def copy_and_fudge_mtime(source_path: str, target_path: str) -> None:
     if os.path.isfile(target_path):
         new_time = os.stat(target_path).st_mtime + 1
 
-    # Use retries to work around potential flakiness on Windows (AppVeyor).
-    retry_on_error(lambda: shutil.copy(source_path, target_path))
+    dir = os.path.dirname(target_path)
+    os.makedirs(dir, exist_ok=True)
+    with open(target_path, "w", encoding="utf-8") as target:
+        target.write(content)
 
     if new_time:
         os.utime(target_path, times=(new_time, new_time))
@@ -430,7 +434,7 @@ def perform_file_operations(
     for op in operations:
         if isinstance(op, UpdateFile):
             # Modify/create file
-            copy_and_fudge_mtime(op.source_path, op.target_path)
+            write_and_fudge_mtime(op.content, op.target_path)
         else:
             # Delete file/directory
             if os.path.isdir(op.path):
@@ -453,9 +457,18 @@ def check_test_output_files(testcase: DataDrivenTestCase,
             raise AssertionError(
                 'Expected file {} was not produced by test case{}'.format(
                     path, ' on step %d' % step if testcase.output2 else ''))
-        with open(path, 'r', encoding='utf8') as output_file:
-            actual_output_content = output_file.read().splitlines()
-        normalized_output = normalize_file_output(actual_output_content,
+        with open(path, encoding='utf8') as output_file:
+            actual_output_content = output_file.read()
+
+        if isinstance(expected_content, Pattern):
+            if expected_content.fullmatch(actual_output_content) is not None:
+                continue
+            raise AssertionError(
+                'Output file {} did not match its expected output pattern\n---\n{}\n---'.format(
+                    path, actual_output_content)
+            )
+
+        normalized_output = normalize_file_output(actual_output_content.splitlines(),
                                                   os.path.abspath(test_temp_dir))
         # We always normalize things like timestamp, but only handle operating-system
         # specific things if requested.

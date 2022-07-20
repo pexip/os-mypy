@@ -15,6 +15,7 @@ from mypy.test.config import test_temp_dir
 from mypy.test.helpers import assert_string_arrays_equal
 
 from mypyc.options import CompilerOptions
+from mypyc.analysis.ircheck import assert_func_ir_valid
 from mypyc.ir.func_ir import FuncIR
 from mypyc.errors import Errors
 from mypyc.irbuild.main import build_ir
@@ -118,6 +119,8 @@ def build_ir_for_single_file(input_lines: List[str],
         raise CompileError(errors.new_messages())
 
     module = list(modules.values())[0]
+    for fn in module.functions:
+        assert_func_ir_valid(fn)
     return module.functions
 
 
@@ -131,7 +134,7 @@ def update_testcase_output(testcase: DataDrivenTestCase, output: List[str]) -> N
     # We can't rely on the test line numbers to *find* the test, since
     # we might fix multiple tests in a run. So find it by the case
     # header. Give up if there are multiple tests with the same name.
-    test_slug = '[case {}]'.format(testcase.name)
+    test_slug = f'[case {testcase.name}]'
     if data_lines.count(test_slug) != 1:
         return
     start_idx = data_lines.index(test_slug)
@@ -162,7 +165,7 @@ def assert_test_output(testcase: DataDrivenTestCase,
 
     assert_string_arrays_equal(
         expected_output, actual,
-        '{} ({}, line {})'.format(message, testcase.file, testcase.line))
+        f'{message} ({testcase.file}, line {testcase.line})')
 
 
 def get_func_names(expected: List[str]) -> List[str]:
@@ -202,7 +205,7 @@ def show_c(cfiles: List[List[Tuple[str, str]]]) -> None:
     heading('Generated C')
     for group in cfiles:
         for cfile, ctext in group:
-            print('== {} =='.format(cfile))
+            print(f'== {cfile} ==')
             print_with_line_numbers(ctext)
     heading('End C')
 
@@ -259,5 +262,5 @@ def infer_ir_build_options_from_test_name(name: str) -> Optional[CompilerOptions
     if m:
         options.capi_version = (int(m.group(1)), int(m.group(2)))
     elif '_py' in name or '_Python' in name:
-        assert False, 'Invalid _py* suffix (should be _pythonX_Y): {}'.format(name)
+        assert False, f'Invalid _py* suffix (should be _pythonX_Y): {name}'
     return options
