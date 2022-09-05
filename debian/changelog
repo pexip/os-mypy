@@ -1,3 +1,9 @@
+mypy (0.961-1pexip2) pexip-bullseye; urgency=medium
+
+  * Bullseye rebuild for ARM64 inclusion
+
+ -- Mark Hymers <mark.hymers@pexip.com>  Mon, 05 Sep 2022 10:34:41 +0100
+
 mypy (0.961-1pexip1) pexip-bullseye; urgency=medium
 
   * Backport current version from bookworm.
