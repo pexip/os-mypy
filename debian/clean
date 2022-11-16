@@ -3,6 +3,10 @@ extensions/mypy_extensions.egg-info/
 .pytest_cache/
 docs/build/
 mypy/__pycache__/
+mypyc/lib-rt/build/
+mypyc/external/googletest/make/*.o
+mypyc/external/googletest/make/*.a
+mypyc/lib-rt/*.so
 test-data/packages/typedpkg/build/
 test-data/packages/typedpkg/dist/
 test-data/packages/typedpkg/typedpkg.egg-info/

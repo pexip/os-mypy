@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: mypy
-Version: 0.961
+Version: 0.991
 Summary: Optional static typing for Python
 Home-page: http://www.mypy-lang.org/
 Author: Jukka Lehtosalo
@@ -14,16 +14,18 @@ Classifier: Environment :: Console
 Classifier: Intended Audience :: Developers
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Programming Language :: Python :: 3
-Classifier: Programming Language :: Python :: 3.6
 Classifier: Programming Language :: Python :: 3.7
 Classifier: Programming Language :: Python :: 3.8
 Classifier: Programming Language :: Python :: 3.9
 Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
 Classifier: Topic :: Software Development
-Requires-Python: >=3.6
+Classifier: Typing :: Typed
+Requires-Python: >=3.7
 Provides-Extra: dmypy
 Provides-Extra: python2
 Provides-Extra: reports
+Provides-Extra: install-types
 License-File: LICENSE
 
 Mypy -- Optional Static Typing for Python
