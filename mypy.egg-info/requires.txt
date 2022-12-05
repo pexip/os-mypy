@@ -10,6 +10,9 @@ typed_ast<2,>=1.4.0
 [dmypy]
 psutil>=4.0
 
+[install-types]
+pip
+
 [python2]
 typed_ast<2,>=1.4.0
 
