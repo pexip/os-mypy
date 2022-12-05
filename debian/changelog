@@ -1,6 +1,7 @@
 mypy (0.991-1pexip1) pexip; urgency=medium
 
   * New upstream version
+  * Use python3.9 still
 
  -- Huw Jones <huw@pexip.com>  Mon, 05 Dec 2022 14:59:25 +0000
 
