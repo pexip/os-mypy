@@ -1,3 +1,89 @@
+mypy (0.991-1) unstable; urgency=medium
+
+  * New upstream version
+  * Also need python3.11-venv
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Wed, 16 Nov 2022 14:05:35 +0100
+
+mypy (0.990-1) unstable; urgency=medium
+
+  * New upstream version
+  * Remove debian/patches/psutils-in-typeshed as it is no longer needed.
+    All other patches refreshed.
+  * d/control: Need newer typeshed for the selftests.
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Tue, 08 Nov 2022 15:33:50 +0100
+
+mypy (0.982-2) unstable; urgency=medium
+
+  * Team upload
+
+  [ Jochen Sprickerhof ]
+  * d/control: Drop unused dependency on python3-typed-ast
+    This dependency is only required for Python < 3.8.
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Thu, 13 Oct 2022 23:39:29 +0200
+
+mypy (0.982-1) unstable; urgency=medium
+
+  * New upstream version
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Tue, 04 Oct 2022 10:29:51 +0200
+
+mypy (0.981-2) unstable; urgency=medium
+
+  * d/control: this release breaks older releases of the dataclasses-
+    json Python package.
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Sun, 02 Oct 2022 12:53:41 +0200
+
+mypy (0.981-1) unstable; urgency=medium
+
+  * New upstream version
+  * removed 4 patches applied upstream; refreshed the rest.
+  * python3.10-venv is now needed for the tests
+  * debian/rules: skip testCustomTypeshedDirWithRelativePathDoesNotCrash
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Thu, 29 Sep 2022 11:52:42 +0200
+
+mypy (0.971-4) unstable; urgency=medium
+
+  * Team upload.
+  * Patch: sleep() in mypyc test suite to avoid races and fix FTBFS on s390x.
+
+ -- Stefano Rivera <stefanor@debian.org>  Mon, 26 Sep 2022 17:18:20 +0200
+
+mypy (0.971-3) unstable; urgency=medium
+
+  [ Michael R. Crusoe ]
+  * Stop skipping tests.
+
+  [ Stefano Rivera ]
+  * Team upload.
+  * Depend on python3-setuptools for autopkgtest, no longer a dependency of
+    python3-virtualenv.
+  * Recommend python3-setuptools, required by mypyc.
+  * Refresh PQ patches.
+  * Patch: Python 3.10.7 support.
+
+ -- Stefano Rivera <stefanor@debian.org>  Mon, 26 Sep 2022 12:36:51 +0200
+
+mypy (0.971-2) unstable; urgency=medium
+
+  * debian/rules: Only run the tests for arch-dependent builds
+  * debian/patches/intersphinx: update patch for "six" links
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Wed, 17 Aug 2022 15:14:24 +0200
+
+mypy (0.971-1) unstable; urgency=medium
+
+  * New upstream version
+  * debian/clean: add additional directories & files
+  * debian/patches/walrus.patch: cherry-pick patch from upstream to fix the
+    walrus tests. Closes: #1017145, #1017312
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Mon, 15 Aug 2022 14:41:00 +0200
+
 mypy (0.961-1pexip2) pexip-bullseye; urgency=medium
 
   * Bullseye rebuild for ARM64 inclusion

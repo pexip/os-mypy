@@ -19,11 +19,12 @@ stubtest --help
 
 export TEST_MYPYC=1
 
-MYPY_TEST_PREFIX=${START} pytest-3 -n auto -v -o testpaths="mypy/test mypyc/test" \
-	-o python_files=test*.py -o python_classes= \
-	-o python_functions= -k "not (StubtestMiscUnit or StubtestUnit)" \
-	--pyargs mypy
+rm -Rf mypy mypyc
 
 cp -r /usr/lib/python3/dist-packages/mypy ./
+cp -r /usr/lib/python3/dist-packages/mypyc ./
+
+MYPY_TEST_PREFIX=${START} pytest-3 -v --pyargs mypy
+
 rm -Rf mypy/typeshed
 /usr/bin/mypy --config-file ${START}/mypy_self_check.ini mypy

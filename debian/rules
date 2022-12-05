@@ -50,6 +50,7 @@ else
 endif
 
 override_dh_auto_build-indep: manpages
+	MYPY_USE_MYPYC=0 dh_auto_build
 ifeq (,$(filter nodoc,$(DEB_BUILD_PROFILES)))
 	PYTHONPATH=$(CURDIR) $(MAKE) -C docs html
 endif
@@ -70,7 +71,7 @@ override_dh_auto_install:
 	dh_movefiles --package=mypy --sourcedir=debian/python3-mypy usr/bin
 	rm -Rf debian/python3-mypy/usr/bin
 
-override_dh_auto_test:
+override_dh_auto_test-arch:
 ifeq (,$(filter nocheck,$(DEB_BUILD_PROFILES)))
 	export TEST_MYPYC=1
 	PYBUILD_SYSTEM=custom \
@@ -79,10 +80,12 @@ ifeq (,$(filter nocheck,$(DEB_BUILD_PROFILES)))
 	dh_auto_install
 	set -e; for v in $(PY3VERS); do \
 		PYTHONPATH=$$(pybuild --print build_dir --pyver $$v | awk '{ print $$3 }') PATH=$$PATH:$(CURDIR)/debian/python3-mypy/usr/bin/ python$$v -m pytest -n auto \
-		-o testpaths="mypy/test mypyc/test" -o python_files=test*.py \
-		-k "not (StubtestMiscUnit or StubtestUnit or testSubclassSpecialize1 or testSubclassSpecialize2 or testMultiModuleSpecialize or testMultiModuleSpecialize_multi or testMultiModuleSpecialize_separate)" \
+		-o testpaths="mypy/test mypyc/test" -o python_files=test*.py -k 'not testCustomTypeshedDirWithRelativePathDoesNotCrash' \
 		-o python_classes= -o python_functions= ; \
 	done
 endif
+
+override_dh_auto_test-indep:
+	echo No tests to run for the "mypy" package, only for "python3-mypy"
 
 .PHONY: manpages

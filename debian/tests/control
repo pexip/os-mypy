@@ -1,3 +1,10 @@
 Tests: run-unit-test
-Depends: mypy, python3-typeshed, python3-pytest-xdist, python3-virtualenv, python3-lxml
+Depends: gcc,
+         @,
+         python3-dev,
+         python3-lxml,
+         python3-pytest-xdist,
+         python3-setuptools,
+         python3-typeshed (>= 0.0~git20221107.4f381af),
+         python3-virtualenv
 Restrictions: allow-stderr
