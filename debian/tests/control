@@ -5,6 +5,7 @@ Depends: gcc,
          python3-lxml,
          python3-pytest-xdist,
          python3-setuptools,
+         python3-tomli,
          python3-typeshed (>= 0.0~git20221107.4f381af),
          python3-virtualenv
 Restrictions: allow-stderr

@@ -53,6 +53,7 @@ docs/source/stubtest.rst
 docs/source/supported_python_features.rst
 docs/source/type_inference_and_annotations.rst
 docs/source/type_narrowing.rst
+docs/source/typed_dict.rst
 misc/proper_plugin.py
 mypy/__init__.py
 mypy/__main__.py
@@ -68,6 +69,7 @@ mypy/checkmember.py
 mypy/checkpattern.py
 mypy/checkstrformat.py
 mypy/config_parser.py
+mypy/constant_fold.py
 mypy/constraints.py
 mypy/copytype.py
 mypy/defaults.py
@@ -77,6 +79,7 @@ mypy/dmypy_util.py
 mypy/erasetype.py
 mypy/errorcodes.py
 mypy/errors.py
+mypy/evalexpr.py
 mypy/expandtype.py
 mypy/exprtotype.py
 mypy/fastparse.py
@@ -845,6 +848,7 @@ mypyc/irbuild/generator.py
 mypyc/irbuild/ll_builder.py
 mypyc/irbuild/main.py
 mypyc/irbuild/mapper.py
+mypyc/irbuild/match.py
 mypyc/irbuild/nonlocalcontrol.py
 mypyc/irbuild/prebuildvisitor.py
 mypyc/irbuild/prepare.py
@@ -909,8 +913,8 @@ mypyc/test/test_refcount.py
 mypyc/test/test_run.py
 mypyc/test/test_serialization.py
 mypyc/test/test_struct.py
-mypyc/test/test_subtype.py
 mypyc/test/test_tuplename.py
+mypyc/test/test_typeops.py
 mypyc/test/testutil.py
 mypyc/test-data/alwaysdefined.test
 mypyc/test-data/analysis.test
@@ -919,6 +923,7 @@ mypyc/test-data/exceptions-freq.test
 mypyc/test-data/exceptions.test
 mypyc/test-data/irbuild-any.test
 mypyc/test-data/irbuild-basic.test
+mypyc/test-data/irbuild-bool.test
 mypyc/test-data/irbuild-bytes.test
 mypyc/test-data/irbuild-classes.test
 mypyc/test-data/irbuild-constant-fold.test
@@ -931,6 +936,7 @@ mypyc/test-data/irbuild-i64.test
 mypyc/test-data/irbuild-int.test
 mypyc/test-data/irbuild-isinstance.test
 mypyc/test-data/irbuild-lists.test
+mypyc/test-data/irbuild-match.test
 mypyc/test-data/irbuild-nested.test
 mypyc/test-data/irbuild-optional.test
 mypyc/test-data/irbuild-set.test
@@ -961,6 +967,7 @@ mypyc/test-data/run-imports.test
 mypyc/test-data/run-integers.test
 mypyc/test-data/run-lists.test
 mypyc/test-data/run-loops.test
+mypyc/test-data/run-match.test
 mypyc/test-data/run-misc.test
 mypyc/test-data/run-multimodule.test
 mypyc/test-data/run-mypy-sim.test
@@ -1016,6 +1023,7 @@ test-data/packages/modulefinder-src/ns_neighbor_pkg/a.py
 test-data/packages/modulefinder-src/ns_neighbor_pkg/py.typed
 test-data/packages/modulefinder/nsx-pkg1/nsx/a/__init__.py
 test-data/packages/modulefinder/nsx-pkg2/nsx/b/__init__.py
+test-data/packages/modulefinder/nsx-pkg3/nsx/c/c
 test-data/packages/modulefinder/nsx-pkg3/nsx/c/c.py
 test-data/packages/modulefinder/nsy-pkg1/nsy/a/__init__.py
 test-data/packages/modulefinder/nsy-pkg1/nsy/a/__init__.pyi
@@ -1023,6 +1031,7 @@ test-data/packages/modulefinder/nsy-pkg2/nsy/b.pyi
 test-data/packages/modulefinder/nsy-pkg2/nsy/c.py
 test-data/packages/modulefinder/nsy-pkg2/nsy/c.pyi
 test-data/packages/modulefinder/nsy-pkg2/nsy/b/__init__.py
+test-data/packages/modulefinder/pkg1/a
 test-data/packages/modulefinder/pkg1/a.py
 test-data/packages/modulefinder/pkg2/b/__init__.py
 test-data/packages/typedpkg/setup.py
@@ -1068,6 +1077,7 @@ test-data/unit/check-classvar.test
 test-data/unit/check-columns.test
 test-data/unit/check-ctypes.test
 test-data/unit/check-custom-plugin.test
+test-data/unit/check-dataclass-transform.test
 test-data/unit/check-dataclasses.test
 test-data/unit/check-dynamic-typing.test
 test-data/unit/check-enum.test
@@ -1105,7 +1115,7 @@ test-data/unit/check-newtype.test
 test-data/unit/check-optional.test
 test-data/unit/check-overloading.test
 test-data/unit/check-parameter-specification.test
-test-data/unit/check-partially-defined.test
+test-data/unit/check-possibly-undefined.test
 test-data/unit/check-protocols.test
 test-data/unit/check-python310.test
 test-data/unit/check-python311.test
@@ -1195,7 +1205,6 @@ test-data/unit/fixtures/args.pyi
 test-data/unit/fixtures/async_await.pyi
 test-data/unit/fixtures/attr.pyi
 test-data/unit/fixtures/bool.pyi
-test-data/unit/fixtures/bool_py2.pyi
 test-data/unit/fixtures/callable.pyi
 test-data/unit/fixtures/classmethod.pyi
 test-data/unit/fixtures/complex.pyi
@@ -1208,7 +1217,6 @@ test-data/unit/fixtures/f_string.pyi
 test-data/unit/fixtures/fine_grained.pyi
 test-data/unit/fixtures/float.pyi
 test-data/unit/fixtures/floatdict.pyi
-test-data/unit/fixtures/floatdict_python2.pyi
 test-data/unit/fixtures/for.pyi
 test-data/unit/fixtures/function.pyi
 test-data/unit/fixtures/isinstance.pyi
@@ -1217,7 +1225,6 @@ test-data/unit/fixtures/isinstancelist.pyi
 test-data/unit/fixtures/list.pyi
 test-data/unit/fixtures/module.pyi
 test-data/unit/fixtures/module_all.pyi
-test-data/unit/fixtures/module_all_python2.pyi
 test-data/unit/fixtures/narrowing.pyi
 test-data/unit/fixtures/notimplemented.pyi
 test-data/unit/fixtures/object_hashable.pyi
@@ -1226,8 +1233,6 @@ test-data/unit/fixtures/ops.pyi
 test-data/unit/fixtures/paramspec.pyi
 test-data/unit/fixtures/primitives.pyi
 test-data/unit/fixtures/property.pyi
-test-data/unit/fixtures/property_py2.pyi
-test-data/unit/fixtures/python2.pyi
 test-data/unit/fixtures/set.pyi
 test-data/unit/fixtures/slice.pyi
 test-data/unit/fixtures/staticmethod.pyi
@@ -1242,6 +1247,7 @@ test-data/unit/fixtures/typing-namedtuple.pyi
 test-data/unit/fixtures/typing-typeddict.pyi
 test-data/unit/fixtures/union.pyi
 test-data/unit/lib-stub/__builtin__.pyi
+test-data/unit/lib-stub/_decimal.pyi
 test-data/unit/lib-stub/abc.pyi
 test-data/unit/lib-stub/blocker.pyi
 test-data/unit/lib-stub/blocker2.pyi
@@ -1250,13 +1256,18 @@ test-data/unit/lib-stub/builtins.pyi
 test-data/unit/lib-stub/collections.pyi
 test-data/unit/lib-stub/contextlib.pyi
 test-data/unit/lib-stub/dataclasses.pyi
+test-data/unit/lib-stub/datetime.pyi
+test-data/unit/lib-stub/decimal.pyi
 test-data/unit/lib-stub/enum.pyi
+test-data/unit/lib-stub/functools.pyi
 test-data/unit/lib-stub/mypy_extensions.pyi
 test-data/unit/lib-stub/six.pyi
 test-data/unit/lib-stub/sys.pyi
+test-data/unit/lib-stub/traceback.pyi
 test-data/unit/lib-stub/types.pyi
 test-data/unit/lib-stub/typing.pyi
 test-data/unit/lib-stub/typing_extensions.pyi
+test-data/unit/lib-stub/unannotated_lib.pyi
 test-data/unit/lib-stub/attr/__init__.pyi
 test-data/unit/lib-stub/attr/converters.pyi
 test-data/unit/lib-stub/attrs/__init__.pyi

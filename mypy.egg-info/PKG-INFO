@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: mypy
-Version: 0.991
+Version: 1.0.1
 Summary: Optional static typing for Python
 Home-page: http://www.mypy-lang.org/
 Author: Jukka Lehtosalo
@@ -9,7 +9,7 @@ License: MIT License
 Project-URL: News, http://mypy-lang.org/news.html
 Project-URL: Documentation, https://mypy.readthedocs.io/en/stable/index.html
 Project-URL: Repository, https://github.com/python/mypy
-Classifier: Development Status :: 4 - Beta
+Classifier: Development Status :: 5 - Production/Stable
 Classifier: Environment :: Console
 Classifier: Intended Audience :: Developers
 Classifier: License :: OSI Approved :: MIT License

@@ -1,3 +1,53 @@
+mypy (1.0.1-1) unstable; urgency=medium
+
+  * New upstream version
+  * Remove trailing whitespace in debian/changelog (routine-update)
+  * Drop the cherry-picked 32-bits.patch, it is part of the new release.
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Fri, 24 Feb 2023 12:56:47 +0100
+
+mypy (1.0.0-1) unstable; urgency=medium
+
+  * Add patch to fix test for 32-bit systems, cherry-picked from upstream.
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Tue, 14 Feb 2023 00:24:00 +0100
+
+mypy (0.991-3) unstable; urgency=medium
+
+  * Team upload.
+  * Add a Depends on python3-tomli for the autopkgtest, so it can run on
+    Python 3.11, and test all branches.
+
+ -- Stefano Rivera <stefanor@debian.org>  Mon, 13 Feb 2023 08:05:19 -0400
+
+mypy (1.0.0-1~0exp1) experimental; urgency=medium
+
+  * Revert: Try the same level of optimization on all archs.
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Mon, 13 Feb 2023 13:22:02 +0100
+
+mypy (1.0.0-1~0exp) experimental; urgency=medium
+
+  * New upstream release.
+  * Standards-Version: 4.6.2 (routine-update)
+  * Use secure URI in Homepage field.
+  * d/control: Build-Depend on the generic python3-venv.
+  * Try the same level of optimization on all archs.
+  * d/control: remove unused dependency on distutils.
+  * d/source/lintian-overrides: ignore false positives about distutils.
+  * d/control: build-dep on furo; drop patch to use the standard sphinx
+    theme.
+  * d/tests/control: tests need python3-tomli
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Thu, 09 Feb 2023 18:55:44 +0100
+
+mypy (0.991-2) unstable; urgency=medium
+
+  * Team upload.
+  * Drop dependency on python3.10-venv
+
+ -- Jochen Sprickerhof <jspricke@debian.org>  Sun, 05 Feb 2023 16:19:50 +0100
+
 mypy (0.991-1) unstable; urgency=medium
 
   * New upstream version

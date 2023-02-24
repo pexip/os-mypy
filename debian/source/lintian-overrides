@@ -1,0 +1,3 @@
+uses-python-distutils [mypyc/build.py:53]
+uses-python-distutils [mypyc/lib-rt/setup.py:9]
+uses-python-distutils [test-data/packages/typedpkg_ns_b-stubs/setup.py:5]
