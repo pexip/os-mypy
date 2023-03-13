@@ -2,6 +2,7 @@ mypy (1.0.1-1pexip1) pexip; urgency=medium
 
   * New upstream release
   * Use standard sphinx theme
+  * Re-enable test-ignore-filelock.patch
 
  -- Huw Jones <huw@pexip.com>  Mon, 13 Mar 2023 15:07:12 +0000
 
