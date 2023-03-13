@@ -1,3 +1,10 @@
+mypy (1.0.1-1pexip1) pexip; urgency=medium
+
+  * New upstream release
+  * Use standard sphinx theme
+
+ -- Huw Jones <huw@pexip.com>  Mon, 13 Mar 2023 15:07:12 +0000
+
 mypy (1.0.1-1) unstable; urgency=medium
 
   * New upstream version
