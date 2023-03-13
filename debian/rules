@@ -43,7 +43,7 @@ debian/sphinx/stubgen_options.rst: docs/source/stubgen.rst
 	sed -n -e '/stubgen --help/,$$ {/stubgen --help/d; p}' $< > $@
 
 override_dh_auto_build-arch:
-ifneq (,$(filter $(DEB_BUILD_ARCH),mips64el mipsel alpha ia64 m68k powerpc riscv64 sh4 sparc64))
+ifneq (,$(filter $(DEB_BUILD_ARCH), mips64el mipsel alpha ia64 m68k powerpc riscv64 sh4 sparc64))
 	MYPY_USE_MYPYC=0 dh_auto_build
 else
 	MYPY_USE_MYPYC=1 dh_auto_build

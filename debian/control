@@ -17,7 +17,7 @@ Build-Depends: debhelper-compat (= 13),
                python3-pytest-xdist <!nocheck>,
                python3-pytest-cov <!nocheck>,
                python3-sphinx <!nodoc>,
-               python3-sphinx-rtd-theme <!nodoc>,
+               furo <!nodoc>,
                python3-typeshed,
                python3-psutil,
                python3-mypy-extensions,
@@ -26,16 +26,16 @@ Build-Depends: debhelper-compat (= 13),
                python3-typeshed <!nocheck>,
                python3-all-dev,
                python3-tomli,
-               python3.9-venv <!nocheck>,
+               python3-venv <!nocheck>,
                python3-doc <!nodoc>,
                cython-doc <!nodoc>,
                python-six-doc <!nodoc>,
                python-setuptools-doc <!nodoc>,
                python-attr-doc <!nodoc>
-Standards-Version: 4.6.1
+Standards-Version: 4.6.2
 Vcs-Browser: https://salsa.debian.org/python-team/packages/mypy
 Vcs-Git: https://salsa.debian.org/python-team/packages/mypy.git
-Homepage: http://www.mypy-lang.org/
+Homepage: https://www.mypy-lang.org/
 Rules-Requires-Root: no
 XS-Pexip-Upstream: http://ftp.debian.org/debian/ bookworm
 
@@ -87,7 +87,6 @@ Depends: ${misc:Depends},
          ${shlibs:Depends},
          python3-mypy-extensions,
          python3-psutil,
-         python3-distutils,
          python3-pkg-resources
 Recommends: python3-lxml,
             python3-setuptools

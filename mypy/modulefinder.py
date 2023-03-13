@@ -148,14 +148,11 @@ class BuildSourceSet:
                 self.source_modules[source.module] = source.path or ""
 
     def is_source(self, file: MypyFile) -> bool:
-        if file.path and file.path in self.source_paths:
-            return True
-        elif file._fullname in self.source_modules:
-            return True
-        elif self.source_text_present:
-            return True
-        else:
-            return False
+        return (
+            (file.path and file.path in self.source_paths)
+            or file._fullname in self.source_modules
+            or self.source_text_present
+        )
 
 
 class FindModuleCache:
@@ -510,7 +507,11 @@ class FindModuleCache:
 
             # In namespace mode, register a potential namespace package
             if self.options and self.options.namespace_packages:
-                if fscache.exists_case(base_path, dir_prefix) and not has_init:
+                if (
+                    not has_init
+                    and fscache.exists_case(base_path, dir_prefix)
+                    and not fscache.isfile_case(base_path, dir_prefix)
+                ):
                     near_misses.append((base_path, dir_prefix))
 
             # No package, look for module.
@@ -573,11 +574,11 @@ class FindModuleCache:
         whether the stubs are compatible with Python 2 and 3.
         """
         metadata_fnam = os.path.join(stub_dir, "METADATA.toml")
-        if os.path.isfile(metadata_fnam):
-            with open(metadata_fnam, "rb") as f:
-                metadata = tomllib.load(f)
-            return bool(metadata.get("python3", True))
-        return True
+        if not os.path.isfile(metadata_fnam):
+            return True
+        with open(metadata_fnam, "rb") as f:
+            metadata = tomllib.load(f)
+        return bool(metadata.get("python3", True))
 
     def find_modules_recursive(self, module: str) -> list[BuildSource]:
         module_path = self.find_module(module)
