@@ -1,6 +1,7 @@
 mypy (1.0.1-1pexip2) pexip-bookworm; urgency=medium
 
   * Initial bookworm build
+  * Drop old pexip patches to bring us closer to bookworm.
 
  -- Mark Hymers <mark.hymers@pexip.com>  Thu, 16 Nov 2023 10:12:43 +0000
 

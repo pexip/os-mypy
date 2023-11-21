@@ -1,5 +1,3 @@
 verbose
 intersphinx
 python3.10.3
-use_standard_sphinx_theme
-test-ignore-filelock.patch

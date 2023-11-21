@@ -1,9 +1,0 @@
---- a/mypy_self_check.ini
-+++ b/mypy_self_check.ini
-@@ -15,3 +15,6 @@
- [mypy-mypy.visitor]
- # See docstring for NodeVisitor for motivation.
- disable_error_code = empty-body
-+
-+[mypy-filelock]
-+ignore_missing_imports = True
