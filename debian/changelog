@@ -1,3 +1,9 @@
+mypy (1.0.1-1+pexip24u4) pexip-bookworm; urgency=medium
+
+  * New versioning scheme
+
+ -- Mark Hymers <mark.hymers@pexip.com>  Thu, 01 Feb 2024 16:12:44 +0000
+
 mypy (1.0.1-1pexip3) pexip-bookworm; urgency=medium
 
   * Bookworm build for product distribution
